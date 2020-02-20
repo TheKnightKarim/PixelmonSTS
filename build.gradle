@@ -1,0 +1,106 @@
+// Stock setup partially grabbed from the internet, partially modified to fit with Hiroku and CraftSteamG's help. Magic.
+
+// Taken from the internet. vvv
+buildscript {
+    repositories {
+        jcenter()
+        maven { url = "http://files.minecraftforge.net/maven" }
+    }
+    dependencies {
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:4.0.4'
+    }
+}
+
+// Taken from the internet. vvv
+apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'com.github.johnrengelman.shadow'
+
+// Sets the version number shown in the file name.
+version = "1.0.0"
+
+// Taken from the internet. vvv
+sourceCompatibility = targetCompatibility = "1.8"
+compileJava
+        {
+            sourceCompatibility = targetCompatibility = "1.8"
+        }
+
+// Enables use of the section character (§) instead of long tags. Thanks, Hiroku!
+//noinspection GroovyAssignabilityCheck
+tasks.withType(JavaCompile)
+        {
+            task ->
+                task.options.encoding = 'UTF-8'
+                task.options.fork = true
+        }
+
+// Basic info for what we're compiling against and how we're doing it, I think?
+minecraft
+        {
+            version = project.forgeVersion
+            mappings = project.mcpVersion
+            runDir = 'run'
+            //useDepAts = true
+            //makeObfSourceJar = false
+        }
+
+// Taken from the internet. vvv
+repositories {
+    mavenCentral()
+    maven {
+        name = 'sponge'
+        url = 'https://repo.spongepowered.org/maven'
+    }
+}
+
+// Allows Sponge and Pixelmon stuff to load up correctly.
+dependencies
+        {
+            // Grab and include Sponge.
+            compile 'org.spongepowered:spongeforge:1.12.2-2838-7.1.8:dev'
+            shadow fileTree(dir: 'libs', include: 'GooeyLibs-1.0.0.jar')
+
+            compile 'net.luckperms:api:5.0'
+
+            // Automatically grabs libraries from the libs folder and adds them to the project. Thanks, CraftSteamG!
+            provided fileTree(dir: 'libs', include: '*.jar')
+        }
+
+configurations {
+    provided
+    compile.extendsFrom provided
+}
+
+shadowJar {
+    baseName = archivesBaseName
+    classifier = null
+    version = version + "-shadow"
+    configurations = [project.configurations.shadow]
+    minimize()
+    exclude "META-INF/fml_cache_class_versions.json"
+    //configurations = [project.configurations.compile]
+}
+
+reobf {
+    shadowJar {} // Reobfuscate the shadowed JAR
+}
+
+processResources {
+    // this will ensure that this task is redone when the versions change.
+    inputs.property "version", project.version
+    inputs.property "mcversion", project.minecraft.version
+
+    // replace stuff in mcmod.info, nothing else
+    from(sourceSets.main.resources.srcDirs) {
+        include "mcmod.info"
+
+        // replace version and mcversion
+        expand "version": project.version, "mcversion": project.minecraft.version
+    }
+
+    // copy everything else, thats not the mcmod.info
+    from(sourceSets.main.resources.srcDirs) {
+        exclude "mcmod.info"
+    }
+}
