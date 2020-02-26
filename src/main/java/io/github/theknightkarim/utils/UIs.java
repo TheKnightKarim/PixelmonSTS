@@ -1,19 +1,21 @@
-package io.github.theknightkarim;
+package io.github.theknightkarim.utils;
 
 import ca.landonjw.gooeylibs.inventory.api.*;
 import com.pixelmonmod.pixelmon.api.pokemon.Pokemon;
 import com.pixelmonmod.pixelmon.config.PixelmonBlocks;
 import com.pixelmonmod.pixelmon.config.PixelmonItems;
 import com.pixelmonmod.pixelmon.config.PixelmonItemsHeld;
+import io.github.theknightkarim.PixelmonSTS;
 import io.github.theknightkarim.configs.Config;
-import io.github.theknightkarim.utils.Utils;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
 import net.minecraft.item.EnumDyeColor;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.text.TextComponentString;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -34,13 +36,31 @@ public class UIs {
                 .onClick(action -> pcUI(player).forceOpenPage(player))
                 .build();
 
+        Template template = Template.builder(3)
+                .border(0,0,3, 9, filler())
+                .set(1,7, pc)
+                .set(2,8, PokeLore(player))
+                .build();
+
+        Page page = Page.builder()
+                .title(Utils.regex("&6&lSTS"))
+                .template(template)
+                .dynamicContents(Utils.getPartyPokemonList(player))
+                .dynamicContentArea(1,1,1,6)
+                .build();
+
+        return page;
+    }
+
+    public static Page pcUI(EntityPlayerMP player) {
+
         Button bulklist;
         if (bulkOrNot.get(player.getUniqueID()) != null && BulkList.get(player.getUniqueID()) != null) {
             List<String> lore = new ArrayList<>();
             if (BulkList.get(player.getUniqueID()).size() > 0) {
-                lore.add(Utils.regex("&5Pokemon in list: &f" + BulkList.get(player.getUniqueID()).size()));
+                lore.add(Utils.regex("&cAmount: &f" + BulkList.get(player.getUniqueID()).size()));
             } else {
-                lore.add(Utils.regex("&cYour bulk list is empty! Add pokemon to view list."));
+                lore.add(Utils.regex("&cYour Bulk List is empty! Add pokemon to view list."));
             }
             bulklist = Button.builder()
                     .item(new ItemStack(PixelmonItemsHeld.spellTag))
@@ -55,35 +75,6 @@ public class UIs {
         } else {
             bulklist = filler();
         }
-
-        Template template;
-        if (Config.Bulk) {
-            template = Template.builder(3)
-                    .border(0,0,3, 9, filler())
-                    .set(1,7, pc)
-                    .set(2, 8, bulk(player))
-                    .set(2,4, bulklist)
-                    .set(0, 8, PokeLore(player))
-                    .build();
-        } else {
-            template = Template.builder(3)
-                    .border(0,0,3, 9, filler())
-                    .set(1,7, pc)
-                    .set(2, 8, PokeLore(player))
-                    .build();
-        }
-
-        Page page = Page.builder()
-                .title(Utils.regex("&6&lSTS"))
-                .template(template)
-                .dynamicContents(Utils.getPartyPokemonList(player))
-                .dynamicContentArea(1,1,1,6)
-                .build();
-
-        return page;
-    }
-
-    public static Page pcUI(EntityPlayerMP player) {
 
         Button back = Button.builder()
                 .item(new ItemStack(PixelmonItems.LtradeHolderLeft))
@@ -126,6 +117,7 @@ public class UIs {
                     .set(1,8, previous)
                     .set(2,8, bulkPC(player))
                     .set(3, 8, PokeLorePC(player))
+                    .set(5, 4, bulklist)
                     .set(4, 8, next)
                     .set(5, 8, last)
                     .build();
@@ -181,7 +173,12 @@ public class UIs {
                                     player.sendMessage(new TextComponentString(Utils.regex("&cYour pokemon is untradeable!")));
                                 } else {
                                     cooldownMap.put(player.getUniqueID(), System.currentTimeMillis());
-                                    //payment onclick + message send for how much
+                                    Utils.trade(player, Utils.playerPokemon.get(player.getUniqueID()));
+                                    try {
+                                        Utils.logger(player, Utils.playerPokemon.get(player.getUniqueID()));
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
                                 }
                                 InventoryAPI.getInstance().closePlayerInventory(player);
                             })
@@ -196,7 +193,12 @@ public class UIs {
                                 player.sendMessage(new TextComponentString(Utils.regex("&cYour pokemon is untradeable!")));
                             } else {
                                 cooldownMap.put(player.getUniqueID(), System.currentTimeMillis());
-                                //payment onclick + message send for how much
+                                Utils.trade(player, Utils.playerPokemon.get(player.getUniqueID()));
+                                try {
+                                    Utils.logger(player, Utils.playerPokemon.get(player.getUniqueID()));
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
                             }
                             InventoryAPI.getInstance().closePlayerInventory(player);
                         })
@@ -227,7 +229,12 @@ public class UIs {
                                     player.sendMessage(new TextComponentString(Utils.regex("&cYour pokemon is untradeable!")));
                                 } else {
                                     cooldownMap.put(player.getUniqueID(), System.currentTimeMillis());
-                                    //payment onclick + message send for how much
+                                    Utils.trade(player, Utils.playerPokemon.get(player.getUniqueID()));
+                                    try {
+                                        Utils.logger(player, Utils.playerPokemon.get(player.getUniqueID()));
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
                                 }
                                 InventoryAPI.getInstance().closePlayerInventory(player);
                             })
@@ -242,7 +249,12 @@ public class UIs {
                                 player.sendMessage(new TextComponentString(Utils.regex("&cYour pokemon is untradeable!")));
                             } else {
                                 cooldownMap.put(player.getUniqueID(), System.currentTimeMillis());
-                                //payment onclick + message send for how much
+                                Utils.trade(player, Utils.playerPokemon.get(player.getUniqueID()));
+                                try {
+                                    Utils.logger(player, Utils.playerPokemon.get(player.getUniqueID()));
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
                             }
                             InventoryAPI.getInstance().closePlayerInventory(player);
                         })
@@ -252,7 +264,14 @@ public class UIs {
             confirmOrCooldownButton = Button.builder()
                     .item(new ItemStack(Items.DYE, 1, 10))
                     .displayName(Utils.regex("&aConfirm"))
-                    //payment onclick + message send for how much
+                    .onClick(action -> {
+                        Utils.trade(player, Utils.playerPokemon.get(player.getUniqueID()));
+                        try {
+                            Utils.logger(player, Utils.playerPokemon.get(player.getUniqueID()));
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    })
                     .build();
         }
 
@@ -276,70 +295,7 @@ public class UIs {
                 .build();
     }
 
-    public static Page bulkUI(EntityPlayerMP player) {
-        Button addOrRemove;
-        if (BulkList.get(player.getUniqueID()) != null) {
-            if (BulkList.get(player.getUniqueID()).contains(Utils.playerPokemon.get(player.getUniqueID()))) {
-                addOrRemove = Button.builder()
-                        .item(new ItemStack(Items.DYE, 1 , 1))
-                        .displayName(Utils.regex("&cRemove pokemon from Bulk List"))
-                        .onClick(action -> {
-                            BulkList.get(player.getUniqueID()).remove(Utils.playerPokemon.get(player.getUniqueID()));
-                            menuUI(player).forceOpenPage(player);
-                        })
-                        .build();
-            } else {
-                addOrRemove = Button.builder()
-                        .item(new ItemStack(Items.DYE, 1 , 10))
-                        .displayName(Utils.regex("&aAdd pokemon to bulk list"))
-                        .onClick(action -> {
-                            pokemonList.add(Utils.playerPokemon.get(player.getUniqueID()));
-                            BulkList.put(player.getUniqueID(), pokemonList);
-                            menuUI(player).forceOpenPage(player);
-                        })
-                        .build();
-            }
-        } else {
-            addOrRemove = Button.builder()
-                    .item(new ItemStack(Items.DYE, 1 , 10))
-                    .displayName(Utils.regex("&aAdd pokemon to bulk list"))
-                    .onClick(action -> {
-                        pokemonList.add(Utils.playerPokemon.get(player.getUniqueID()));
-                        BulkList.put(player.getUniqueID(), pokemonList);
-                        menuUI(player).forceOpenPage(player);
-                    })
-                    .build();
-        }
-
-        Button decline = Button.builder()
-                .item(new ItemStack(Items.DYE, 1, 1))
-                .displayName(Utils.regex("&cDecline"))
-                .type(ButtonType.PreviousPage)
-                .build();
-
-        Template template = Template.builder(3)
-                .set(1,2, addOrRemove)
-                .set(1,4, Utils.playerButton.get(player.getUniqueID()))
-                .set(1, 6, decline)
-                .border(0,0,3,9, filler())
-                .build();
-
-        Page page = Page.builder()
-                .title(Utils.regex("&b&lConfirmation"))
-                .template(template)
-                .previousPage(menuUI(player))
-                .build();
-
-        return page;
-    }
-
-    public static Page bulkList(EntityPlayerMP player) {
-        Button decline = Button.builder()
-                .item(new ItemStack(Items.DYE, 1, 1))
-                .displayName(Utils.regex("&cDecline"))
-                .type(ButtonType.PreviousPage)
-                .build();
-
+    public static Page confirmationUIPC(EntityPlayerMP player) {
         Button confirmOrCooldownButton;
         if (Config.Cooldown && Config.CooldownPayment) {
             if (cooldownMap.containsKey(player.getUniqueID())) {
@@ -368,7 +324,12 @@ public class UIs {
                                     player.sendMessage(new TextComponentString(Utils.regex("&cYour pokemon is untradeable!")));
                                 } else {
                                     cooldownMap.put(player.getUniqueID(), System.currentTimeMillis());
-                                    //payment onclick + message send for how much
+                                    Utils.tradePC(player, Utils.playerPokemon.get(player.getUniqueID()));
+                                    try {
+                                        Utils.logger(player, Utils.playerPokemon.get(player.getUniqueID()));
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
                                 }
                                 InventoryAPI.getInstance().closePlayerInventory(player);
                             })
@@ -383,7 +344,12 @@ public class UIs {
                                 player.sendMessage(new TextComponentString(Utils.regex("&cYour pokemon is untradeable!")));
                             } else {
                                 cooldownMap.put(player.getUniqueID(), System.currentTimeMillis());
-                                //payment onclick + message send for how much
+                                Utils.tradePC(player, Utils.playerPokemon.get(player.getUniqueID()));
+                                try {
+                                    Utils.logger(player, Utils.playerPokemon.get(player.getUniqueID()));
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
                             }
                             InventoryAPI.getInstance().closePlayerInventory(player);
                         })
@@ -414,7 +380,12 @@ public class UIs {
                                     player.sendMessage(new TextComponentString(Utils.regex("&cYour pokemon is untradeable!")));
                                 } else {
                                     cooldownMap.put(player.getUniqueID(), System.currentTimeMillis());
-                                    //payment onclick + message send for how much
+                                    Utils.tradePC(player, Utils.playerPokemon.get(player.getUniqueID()));
+                                    try {
+                                        Utils.logger(player, Utils.playerPokemon.get(player.getUniqueID()));
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
                                 }
                                 InventoryAPI.getInstance().closePlayerInventory(player);
                             })
@@ -429,7 +400,12 @@ public class UIs {
                                 player.sendMessage(new TextComponentString(Utils.regex("&cYour pokemon is untradeable!")));
                             } else {
                                 cooldownMap.put(player.getUniqueID(), System.currentTimeMillis());
-                                //payment onclick + message send for how much
+                                Utils.tradePC(player, Utils.playerPokemon.get(player.getUniqueID()));
+                                try {
+                                    Utils.logger(player, Utils.playerPokemon.get(player.getUniqueID()));
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
                             }
                             InventoryAPI.getInstance().closePlayerInventory(player);
                         })
@@ -439,7 +415,245 @@ public class UIs {
             confirmOrCooldownButton = Button.builder()
                     .item(new ItemStack(Items.DYE, 1, 10))
                     .displayName(Utils.regex("&aConfirm"))
-                    //payment onclick + message send for how much
+                    .onClick(action -> {
+                        Utils.tradePC(player, Utils.playerPokemon.get(player.getUniqueID()));
+                        try {
+                            Utils.logger(player, Utils.playerPokemon.get(player.getUniqueID()));
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    })
+                    .build();
+        }
+
+        Button decline = Button.builder()
+                .item(new ItemStack(Items.DYE, 1, 1))
+                .displayName(Utils.regex("&cDecline"))
+                .type(ButtonType.PreviousPage)
+                .build();
+
+        Template template = Template.builder(3)
+                .set(1,2, confirmOrCooldownButton)
+                .set(1,4, Utils.playerButton.get(player.getUniqueID()))
+                .set(1, 6, decline)
+                .border(0,0,3,9, filler())
+                .build();
+
+        return Page.builder()
+                .title(Utils.regex("&b&lConfirmation"))
+                .template(template)
+                .previousPage(pcUI(player))
+                .build();
+    }
+
+    public static Page bulkUI(EntityPlayerMP player) {
+        Button addOrRemove;
+        if (BulkList.get(player.getUniqueID()) != null) {
+            if (BulkList.get(player.getUniqueID()).contains(Utils.playerPokemon.get(player.getUniqueID())) || BulkList.get(player.getUniqueID()).size() == Config.MaxPokemoninBulk) {
+                List<String> lore = new ArrayList<>();
+                if (BulkList.get(player.getUniqueID()).size() == Config.MaxPokemoninBulk) {
+                    lore.add(Utils.regex("&eLimit reached! You can't add more pokemon."));
+                }
+                addOrRemove = Button.builder()
+                        .item(new ItemStack(Items.DYE, 1 , 1))
+                        .displayName(Utils.regex("&cRemove pokemon from Bulk List"))
+                        .onClick(action -> {
+                            BulkList.get(player.getUniqueID()).remove(Utils.playerPokemon.get(player.getUniqueID()));
+                            menuUI(player).forceOpenPage(player);
+                        })
+                        .lore(lore)
+                        .build();
+            } else {
+                addOrRemove = Button.builder()
+                        .item(new ItemStack(Items.DYE, 1 , 10))
+                        .displayName(Utils.regex("&aAdd pokemon to Bulk List"))
+                        .onClick(action -> {
+                            pokemonList.add(Utils.playerPokemon.get(player.getUniqueID()));
+                            BulkList.put(player.getUniqueID(), pokemonList);
+                            menuUI(player).forceOpenPage(player);
+                        })
+                        .build();
+            }
+        } else {
+            addOrRemove = Button.builder()
+                    .item(new ItemStack(Items.DYE, 1 , 10))
+                    .displayName(Utils.regex("&aAdd pokemon to Bulk List"))
+                    .onClick(action -> {
+                        pokemonList.add(Utils.playerPokemon.get(player.getUniqueID()));
+                        BulkList.put(player.getUniqueID(), pokemonList);
+                        menuUI(player).forceOpenPage(player);
+                    })
+                    .build();
+        }
+
+        Button decline = Button.builder()
+                .item(new ItemStack(Items.DYE, 1, 1))
+                .displayName(Utils.regex("&cDecline"))
+                .type(ButtonType.PreviousPage)
+                .build();
+
+        Template template = Template.builder(3)
+                .set(1,2, addOrRemove)
+                .set(1,4, Utils.playerButton.get(player.getUniqueID()))
+                .set(1, 6, decline)
+                .border(0,0,3,9, filler())
+                .build();
+
+        Page page = Page.builder()
+                .title(Utils.regex("&b&lConfirmation"))
+                .template(template)
+                .previousPage(pcUI(player))
+                .build();
+
+        return page;
+    }
+
+    public static Page bulkList(EntityPlayerMP player) {
+        Button decline = Button.builder()
+                .item(new ItemStack(Items.DYE, 1, 1))
+                .displayName(Utils.regex("&cDecline"))
+                .type(ButtonType.PreviousPage)
+                .build();
+
+        Button confirmOrCooldownButton;
+        if (Config.Cooldown && Config.CooldownPayment) {
+            if (cooldownMap.containsKey(player.getUniqueID())) {
+                List<String> lore = new ArrayList<>();
+                lore.add(Utils.regex("&7Click to bypass for &7&l" + Config.CooldownPaymentPrice + " " + PixelmonSTS.currency.getName()));
+                if (Utils.secondsleft(player) > 0) {
+                    confirmOrCooldownButton = Button.builder()
+                            .item(new ItemStack(PixelmonItems.hourglassGold))
+                            .displayName(Utils.regex("&7Cooldown Duration&f: &b" + Utils.secondsleft(player) + " seconds"))
+                            .onClick((action) -> {
+                                if (Utils.secondsleft(player) > 0) { //FIX
+                                    Utils.enoughMoney(player);
+                                } else {
+                                    Utils.bulkTrade(player);
+                                    try {
+                                        Utils.logger(player, UIs.BulkList.get(player.getUniqueID()));
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            })
+                            .lore(lore)
+                            .build();
+                } else {
+                    cooldownMap.remove(player.getUniqueID());
+                    confirmOrCooldownButton = Button.builder()
+                            .item(new ItemStack(Items.DYE, 1 , 10))
+                            .displayName(Utils.regex("&aConfirm"))
+                            .onClick(action -> {
+                                if (Utils.playerPokemon.get(action.getPlayer().getUniqueID()).hasSpecFlag("untradeable")) {
+                                    player.sendMessage(new TextComponentString(Utils.regex("&cYour pokemon is untradeable!")));
+                                } else {
+                                    cooldownMap.put(player.getUniqueID(), System.currentTimeMillis());
+                                    Utils.bulkTrade(player);
+                                    try {
+                                        Utils.logger(player, UIs.BulkList.get(player.getUniqueID()));
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                                InventoryAPI.getInstance().closePlayerInventory(player);
+                            })
+                            .build();
+                }
+            } else {
+                confirmOrCooldownButton = Button.builder()
+                        .item(new ItemStack(Items.DYE, 1 , 10))
+                        .displayName(Utils.regex("&aConfirm"))
+                        .onClick(action -> {
+                            if (Utils.playerPokemon.get(action.getPlayer().getUniqueID()).hasSpecFlag("untradeable")) {
+                                player.sendMessage(new TextComponentString(Utils.regex("&cYour pokemon is untradeable!")));
+                            } else {
+                                cooldownMap.put(player.getUniqueID(), System.currentTimeMillis());
+                                Utils.bulkTrade(player);
+                                try {
+                                    Utils.logger(player, UIs.BulkList.get(player.getUniqueID()));
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            InventoryAPI.getInstance().closePlayerInventory(player);
+                        })
+                        .build();
+            }
+        } else if (Config.Cooldown) {
+            if (cooldownMap.containsKey(player.getUniqueID())) {
+                if (Utils.secondsleft(player) > 0) {
+                    List<String> lore = new ArrayList<>();
+                    lore.add("Duration&f: &b" + Utils.secondsleft(player) + " seconds");
+                    confirmOrCooldownButton = Button.builder()
+                            .item(new ItemStack(PixelmonItems.hourglassGold))
+                            .displayName(Utils.regex("&7Cooldown"))
+                            .onClick((action) -> {
+                                if (Utils.secondsleft(player) > 0) {
+                                    Utils.enoughMoney(player);
+                                } else {
+                                    Utils.bulkTrade(player);
+                                    try {
+                                        Utils.logger(player, BulkList.get(player.getUniqueID()));
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            })
+                            .lore(lore)
+                            .build();
+                } else {
+                    cooldownMap.remove(player.getUniqueID());
+                    confirmOrCooldownButton = Button.builder()
+                            .item(new ItemStack(Items.DYE, 1 , 10))
+                            .displayName(Utils.regex("&aConfirm"))
+                            .onClick(action -> {
+                                if (Utils.playerPokemon.get(action.getPlayer().getUniqueID()).hasSpecFlag("untradeable")) {
+                                    player.sendMessage(new TextComponentString(Utils.regex("&cYour pokemon is untradeable!")));
+                                } else {
+                                    cooldownMap.put(player.getUniqueID(), System.currentTimeMillis());
+                                    Utils.bulkTrade(player);
+                                    try {
+                                        Utils.logger(player, BulkList.get(player.getUniqueID()));
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                                InventoryAPI.getInstance().closePlayerInventory(player);
+                            })
+                            .build();
+                }
+            } else {
+                confirmOrCooldownButton = Button.builder()
+                        .item(new ItemStack(Items.DYE, 1 , 10))
+                        .displayName(Utils.regex("&aConfirm"))
+                        .onClick(action -> {
+                            if (Utils.playerPokemon.get(action.getPlayer().getUniqueID()).hasSpecFlag("untradeable")) {
+                                player.sendMessage(new TextComponentString(Utils.regex("&cYour pokemon is untradeable!")));
+                            } else {
+                                cooldownMap.put(player.getUniqueID(), System.currentTimeMillis());
+                                Utils.bulkTrade(player);
+                                try {
+                                    Utils.logger(player, BulkList.get(player.getUniqueID()));
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            InventoryAPI.getInstance().closePlayerInventory(player);
+                        })
+                        .build();
+            }
+        } else {
+            confirmOrCooldownButton = Button.builder()
+                    .item(new ItemStack(Items.DYE, 1, 10))
+                    .displayName(Utils.regex("&aConfirm"))
+                    .onClick(action -> {
+                        Utils.bulkTrade(player);
+                        try {
+                            Utils.logger(player, BulkList.get(player.getUniqueID()));
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    })
                     .build();
         }
 
@@ -554,14 +768,19 @@ public class UIs {
         int meta;
         if (DescOrPriceBool) {
             line = Utils.regex("&6Stats");
-            meta = 400;
+            meta = 375;
         } else {
             line = Utils.regex("&6Price");
             meta= 0;
         }
+        ItemStack itemStack = new ItemStack(PixelmonItems.unoOrb, 1, meta);
+        NBTTagCompound nbtTagCompound = new NBTTagCompound();
+        nbtTagCompound.setInteger("Unbreakable", 1);
+        nbtTagCompound.setInteger("HideFlags", 2);
+        itemStack.setTagCompound(nbtTagCompound);
 
         return Button.builder()
-                .item(new ItemStack(PixelmonItems.unoOrb, 1, meta))
+                .item(itemStack)
                 .displayName(Utils.regex(line))
                 .onClick(action -> {
                     if (DescOrPriceBool) {
@@ -578,14 +797,22 @@ public class UIs {
     public static Button PokeLorePC(EntityPlayerMP player) {
         boolean DescOrPriceBool = DescOrPrice.get(player.getUniqueID()) != null;
         String line;
+        int meta;
         if (DescOrPriceBool) {
             line = Utils.regex("&6Stats");
+            meta = 375;
         } else {
             line = Utils.regex("&6Price");
+            meta= 0;
         }
+        ItemStack itemStack = new ItemStack(PixelmonItems.unoOrb, 1, meta);
+        NBTTagCompound nbtTagCompound = new NBTTagCompound();
+        nbtTagCompound.setInteger("Unbreakable", 1);
+        nbtTagCompound.setInteger("HideFlags", 2);
+        itemStack.setTagCompound(nbtTagCompound);
 
         return Button.builder()
-                .item(new ItemStack(Items.PAPER))
+                .item(itemStack)
                 .displayName(Utils.regex(line))
                 .onClick(action -> {
                     if (DescOrPriceBool) {
