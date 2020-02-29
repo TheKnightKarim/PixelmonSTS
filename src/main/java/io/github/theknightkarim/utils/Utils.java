@@ -6,8 +6,11 @@ import com.google.gson.*;
 import com.pixelmonmod.pixelmon.Pixelmon;
 import com.pixelmonmod.pixelmon.api.pokemon.Pokemon;
 import com.pixelmonmod.pixelmon.api.storage.PCStorage;
+import com.pixelmonmod.pixelmon.config.PixelmonConfig;
 import com.pixelmonmod.pixelmon.config.PixelmonItems;
+import com.pixelmonmod.pixelmon.entities.pixelmon.stats.EVStore;
 import com.pixelmonmod.pixelmon.entities.pixelmon.stats.Gender;
+import com.pixelmonmod.pixelmon.entities.pixelmon.stats.IVStore;
 import com.pixelmonmod.pixelmon.enums.EnumSpecies;
 import com.pixelmonmod.pixelmon.storage.PlayerPartyStorage;
 import io.github.theknightkarim.GSON.SellData;
@@ -47,7 +50,7 @@ public class Utils {
     public static HashMap<UUID, Pokemon> playerPokemon = new HashMap<>();
     private static DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
     private static LocalDateTime now = LocalDateTime.now();
-    private static HashMap<String, SellData> prices = new HashMap<>();
+    private static EnumMap<EnumSpecies, SellData> prices = new EnumMap(EnumSpecies.class);
     private static Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 
     private static List<String> getDesc(Pokemon pokemon) {
@@ -88,11 +91,14 @@ public class Utils {
 
                 SellData selldata = gson.fromJson(data, SellData.class);
                 for (JsonElement s : names) {
-                    prices.put(s.getAsString(), selldata);
+                	EnumSpecies species = EnumSpecies.getFromNameAnyCase(s.getAsString());
+                	if (species != null)
+                		prices.put(species, selldata);
                 }
             }
         } catch (IOException | IllegalStateException exception) {
-            System.out.println(exception);
+            //System.out.println(exception);
+        	exception.printStackTrace();
         }
     }
 
@@ -141,222 +147,105 @@ public class Utils {
     }
 
     private static List<String> getPriceAsLore(Pokemon pokemon) {
+    	SellData sd = prices.get(pokemon.getSpecies());
+    	if (sd == null) 
+    		sd = new SellData(); // Baseprice selldata, might want to keep that static somewhere
+    	
         List<String> lore = new ArrayList<>();
-        if (!pokemon.isEgg()) {
-            if (Boosters.Shiny) {
-                if (pokemon.isShiny()) {
-                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        lore.add(regex(Translation.PriceLore.shiny + prices.get(pokemon.getSpecies().getPokemonName()).shiny));
-                    } else {
-                        lore.add(regex(Translation.PriceLore.shiny + Prices.Shiny));
-                    }
-                }
-            }
-            if (Boosters.CustomTexture) {
-                if (!pokemon.getCustomTexture().isEmpty()) {
-                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        lore.add(regex(Translation.PriceLore.customtexture + prices.get(pokemon.getSpecies().getPokemonName()).customtexture));
-                    } else {
-                        lore.add(regex(Translation.PriceLore.customtexture + Prices.CustomTexture));
-                    }
-                }
-            }
-            if (Boosters.Legendary) {
-                if (pokemon.isLegendary()) {
-                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        lore.add(regex(Translation.PriceLore.legendary + prices.get(pokemon.getSpecies().getPokemonName()).legendary));
-                    } else {
-                        lore.add(regex(Translation.PriceLore.legendary + Prices.Legendary));
-                    }
-                }
-            }
-            if (Boosters.UltraBeast) {
-                if (EnumSpecies.ultrabeasts.contains(pokemon.getSpecies().getPokemonName())) {
-                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        lore.add(regex(Translation.PriceLore.ultrabeast + prices.get(pokemon.getSpecies().getPokemonName()).ub));
-                    } else {
-                        lore.add(regex(Translation.PriceLore.ultrabeast + Prices.UltraBeast));
-                    }
-                }
-            }
-            if (Boosters.MaxIV) {
-                List<Integer> maxivs = new ArrayList<>();
-                for (int x : pokemon.getIVs().getArray())
-                    if (x == 31) {
-                        maxivs.add(x);
-                    }
-                if (maxivs.size() != 0) {
-                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        lore.add(regex( Translation.PriceLore.maxIVEVnumbercolor + maxivs.size() + " " + Translation.PriceLore.maxIVs + (prices.get(pokemon.getSpecies().getPokemonName()).maxIV * maxivs.size())));
-                    } else {
-                        lore.add(regex( Translation.PriceLore.maxIVEVnumbercolor + maxivs.size() + " " + Translation.PriceLore.maxIVs + (Prices.MaxIV * maxivs.size())));
-                    }
-                }
-            }
-            if (Boosters.MaxEV) {
-                List<Integer> maxevs = new ArrayList<>();
-                for (int x : pokemon.getEVs().getArray())
-                    if (x == 252) {
-                        maxevs.add(x);
-                    }
-                if (maxevs.size() != 0) {
-                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        lore.add(regex(Translation.PriceLore.maxIVEVnumbercolor + maxevs.size() + " " + Translation.PriceLore.maxEVs + (prices.get(pokemon.getSpecies().getPokemonName()).maxEV * maxevs.size())));
-                    } else {
-                        lore.add(regex(Translation.PriceLore.maxIVEVnumbercolor + maxevs.size() + " " + Translation.PriceLore.maxEVs + (Prices.MaxEV * maxevs.size())));
-                    }
-                }
-            }
-            if (Boosters.Level) {
-                if (pokemon.getLevel() == 100) {
-                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        lore.add(regex(Translation.PriceLore.maxLevel + prices.get(pokemon.getSpecies().getPokemonName()).maxlevel));
-                    } else {
-                        lore.add(regex(Translation.PriceLore.maxLevel + Prices.MaxLevel));
-                    }
-                } else {
-                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        lore.add(regex(Translation.PriceLore.level + pokemon.getLevel() + Translation.PriceLore.levelpricecolor + (prices.get(pokemon.getSpecies().getPokemonName()).level * pokemon.getLevel())));
-                    } else {
-                        lore.add(regex(Translation.PriceLore.level + pokemon.getLevel() + Translation.PriceLore.levelpricecolor + (Prices.Level * pokemon.getLevel())));
-                    }
-                }
-            }
-            if (Boosters.HA) {
-                if (pokemon.getAbilitySlot() == 2) {
-                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        lore.add(regex(Translation.PriceLore.HA + prices.get(pokemon.getSpecies().getPokemonName()).HA));
-                    } else {
-                        lore.add(regex(Translation.PriceLore.HA + Prices.HA));
-                    }
-                }
-            }
+        
+        if (pokemon.isEgg()) {
+        	if (sd.egg > 0) {
+        		lore.add(regex(Translation.PriceLore.egg + sd.egg));
+        	}
+        	return lore;
         }
-        if (pokemon.isEgg() && Config.EggBool) {
-            if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
-                lore.add(regex(Translation.PriceLore.egg + prices.get(pokemon.getSpecies().getPokemonName()).egg));
-            } else {
-                lore.add(regex(Translation.PriceLore.egg + Prices.Egg));
-            }
-        } else if (pokemon.isEgg() && !Config.EggBool) {
+        lore.add(regex(Translation.PriceLore.base + sd.base)); // Having base price on top instead of bottom
+        
+        if (sd.shiny > 0 && pokemon.isShiny())
+        	lore.add(regex(Translation.PriceLore.shiny + sd.shiny));
+        
+        if (sd.customtexture > 0 && !pokemon.getCustomTexture().isEmpty())
+        	 lore.add(regex(Translation.PriceLore.customtexture + sd.customtexture));
+       
+        if (sd.legendary > 0 && pokemon.isLegendary())
+        	lore.add(regex(Translation.PriceLore.legendary + sd.legendary));
+
+        if (sd.ub > 0 && EnumSpecies.ultrabeasts.contains(pokemon.getSpecies().getPokemonName()))
+        	lore.add(regex(Translation.PriceLore.ultrabeast + sd.ub));
+
+        if (sd.maxIV > 0) {
+            int max = 0;
+            for (int x : pokemon.getIVs().getArray())
+                if (x >= IVStore.MAX_IVS) 
+                    max++;
+            if (max > 0)
+            	lore.add(regex(Translation.PriceLore.maxIVEVnumbercolor + max + " " + Translation.PriceLore.maxIVs + (sd.maxIV * max)));
+        }
+        if (sd.maxEV > 0) {
+            int max = 0;
+            for (int x : pokemon.getEVs().getArray())
+                if (x >= EVStore.MAX_EVS) 
+                    max++;
+            if (max > 0) 
+            	lore.add(regex(Translation.PriceLore.maxIVEVnumbercolor + max + " " + Translation.PriceLore.maxEVs + (sd.maxEV * max)));
+        }
+        if (pokemon.getLevel() == PixelmonConfig.maxLevel) {
+        	lore.add(regex(Translation.PriceLore.maxLevel + sd.maxlevel));
         } else {
-            if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
-                lore.add(regex(Translation.PriceLore.base  + prices.get(pokemon.getSpecies().getPokemonName()).base));
-            } else {
-                lore.add(regex(Translation.PriceLore.base + Prices.Base));
-            }
-            lore.add(regex(Translation.PriceLore.totalprice + getPrice(pokemon)));
+        	 lore.add(regex(Translation.PriceLore.level + pokemon.getLevel() + Translation.PriceLore.levelpricecolor + (sd.level * pokemon.getLevel())));
         }
+        if (pokemon.getAbilitySlot() == 2)
+        	lore.add(regex(Translation.PriceLore.HA + sd.HA));
+        
+        lore.add(regex(Translation.PriceLore.totalprice + getPrice(pokemon)));
         return lore;
     }
 
     static int getPrice(Pokemon pokemon) {
-        int price = 0;
-        if (!pokemon.isEgg()) {
-            if (Boosters.Shiny) {
-                if (pokemon.isShiny()) {
-                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        price += prices.get(pokemon.getSpecies().getPokemonName()).shiny;
-                    } else {
-                        price += Prices.Shiny;
-                    }
-                }
+    	SellData sd = prices.get(pokemon.getSpecies());
+    	if (sd == null) 
+    		sd = new SellData(); // Baseprice selldata, might want to keep that static somewhere
+    	
+    	if (pokemon.isEgg()) // EggBool is obsolete - this allows to ban eggs of certain pokemon but not others.
+    		return sd.egg;
+    		
+		int price = sd.base;
+		
+    	if (pokemon.isShiny())
+    		price += sd.shiny;
+    	if (!pokemon.getCustomTexture().isEmpty())
+    		price += sd.customtexture;
+    	if (pokemon.isLegendary())
+    		price += sd.legendary;
+    	if (EnumSpecies.ultrabeasts.contains(pokemon.getSpecies().getPokemonName()))
+    		price += sd.ub;
+    	if (sd.maxIV > 0) {
+            int max = 0;
+            for (int x : pokemon.getIVs().getArray())
+                if (x >= IVStore.MAX_IVS) 
+                	max++;
+            if (max > 0) {
+                price += sd.maxIV * max;
             }
-            if (Boosters.CustomTexture) {
-                if (!pokemon.getCustomTexture().isEmpty()) {
-                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        price += prices.get(pokemon.getSpecies().getPokemonName()).customtexture;
-                    } else {
-                        price += Prices.CustomTexture;
-                    }
-                }
+    	}
+    	if (sd.maxEV > 0) {
+            int max = 0;
+            for (int x : pokemon.getEVs().getArray())
+                if (x >= EVStore.MAX_EVS) 
+                	max++;
+            if (max > 0) {
+                price += sd.maxEV * max;
             }
-            if (Boosters.Legendary) {
-                if (pokemon.isLegendary()) {
-                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        price += prices.get(pokemon.getSpecies().getPokemonName()).legendary;
-                    } else {
-                        price += Prices.Legendary;
-                    }
-                }
-            }
-            if (Boosters.UltraBeast) {
-                if (EnumSpecies.ultrabeasts.contains(pokemon.getSpecies().getPokemonName())) {
-                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        price += prices.get(pokemon.getSpecies().getPokemonName()).ub;
-                    } else {
-                        price += Prices.UltraBeast;
-                    }
-                }
-            }
-            if (Boosters.MaxIV) {
-                List<Integer> maxivs = new ArrayList<>();
-                for (int x : pokemon.getIVs().getArray())
-                    if (x == 31) {
-                        maxivs.add(x);
-                    }
-                if (maxivs.size() != 0) {
-                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        price += prices.get(pokemon.getSpecies().getPokemonName()).maxIV * maxivs.size();
-                    } else {
-                        price += Prices.MaxIV * maxivs.size();
-                    }
-                }
-            }
-            if (Boosters.MaxEV) {
-                List<Integer> maxevs = new ArrayList<>();
-                for (int x : pokemon.getEVs().getArray())
-                    if (x == 252) {
-                        maxevs.add(x);
-                    }
-                if (maxevs.size() != 0) {
-                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        price += prices.get(pokemon.getSpecies().getPokemonName()).maxEV * maxevs.size();
-                    } else {
-                        price += Prices.MaxEV * maxevs.size();
-                    }
-                }
-            }
-            if (Boosters.Level) {
-                if (pokemon.getLevel() == 100) {
-                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        price += prices.get(pokemon.getSpecies().getPokemonName()).maxlevel;
-                    } else {
-                        price += Prices.MaxLevel;
-                    }
-                } else {
-                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        price += prices.get(pokemon.getSpecies().getPokemonName()).level * pokemon.getLevel();
-                    } else {
-                        price += Prices.Level * pokemon.getLevel();
-                    }
-                }
-            }
-            if (Boosters.HA) {
-                if (pokemon.getAbilitySlot() == 2) {
-                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        price += prices.get(pokemon.getSpecies().getPokemonName()).HA;
-                    } else {
-                        price += Prices.HA;
-                    }
-                }
-            }
-        }
-        if (pokemon.isEgg() && Config.EggBool) {
-            if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
-                price += prices.get(pokemon.getSpecies().getPokemonName()).egg;
-            } else {
-                price += Prices.Egg;
-            }
-        } else if (pokemon.isEgg() && !Config.EggBool) {
-        } else {
-            if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
-                price += prices.get(pokemon.getSpecies().getPokemonName()).base;
-            } else {
-                price += Prices.Base;
-            }
-        }
-        return price;
+    	}
+    	if (pokemon.getLevel() == PixelmonConfig.maxLevel) {
+    		price += sd.maxlevel;
+    	} else {
+    		price += sd.level * pokemon.getLevel();
+    	}
+    	if (pokemon.getAbilitySlot() == 2)
+    		price += sd.HA;
+    	
+    	return price;
     }
 
     static List<Button> getBulkList(EntityPlayerMP player){
