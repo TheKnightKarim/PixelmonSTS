@@ -3,7 +3,7 @@ package io.github.theknightkarim.configs;
 import io.github.theknightkarim.PixelmonSTS;
 import net.minecraftforge.common.config.Config;
 
-@Config(modid = PixelmonSTS.MOD_ID, name = PixelmonSTS.MOD_NAME + "/prices.cfg")
+@Config(modid = PixelmonSTS.MOD_ID, name = PixelmonSTS.MOD_NAME + "/prices")
 public class Prices {
 
     @Config.Comment({

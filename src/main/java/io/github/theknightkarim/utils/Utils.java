@@ -2,16 +2,20 @@ package io.github.theknightkarim.utils;
 
 import ca.landonjw.gooeylibs.inventory.api.Button;
 import ca.landonjw.gooeylibs.inventory.api.InventoryAPI;
+import com.google.gson.*;
 import com.pixelmonmod.pixelmon.Pixelmon;
 import com.pixelmonmod.pixelmon.api.pokemon.Pokemon;
 import com.pixelmonmod.pixelmon.api.storage.PCStorage;
 import com.pixelmonmod.pixelmon.config.PixelmonItems;
+import com.pixelmonmod.pixelmon.entities.pixelmon.stats.Gender;
 import com.pixelmonmod.pixelmon.enums.EnumSpecies;
 import com.pixelmonmod.pixelmon.storage.PlayerPartyStorage;
+import io.github.theknightkarim.GSON.SellData;
 import io.github.theknightkarim.PixelmonSTS;
 import io.github.theknightkarim.configs.Boosters;
 import io.github.theknightkarim.configs.Config;
 import io.github.theknightkarim.configs.Prices;
+import io.github.theknightkarim.configs.Translation;
 import net.luckperms.api.cacheddata.CachedMetaData;
 import net.luckperms.api.model.user.User;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -25,6 +29,8 @@ import org.spongepowered.api.service.economy.account.UniqueAccount;
 import org.spongepowered.api.service.economy.transaction.ResultType;
 import org.spongepowered.api.service.economy.transaction.TransactionResult;
 
+import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -39,73 +45,137 @@ public class Utils {
 
     public static HashMap<UUID, Button> playerButton = new HashMap<>();
     public static HashMap<UUID, Pokemon> playerPokemon = new HashMap<>();
-    private static String regex = "&(?=[123456789abcdefklmnor])";
     private static DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
     private static LocalDateTime now = LocalDateTime.now();
+    private static HashMap<String, SellData> prices = new HashMap<>();
+    private static Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 
-    public static List<String> getDesc(Pokemon pokemon) {
+    private static List<String> getDesc(Pokemon pokemon) {
         List<String> lore = new ArrayList<>();
         DecimalFormat df = new DecimalFormat("###.##");
         String evPercentage = df.format(((pokemon.getStats().evs.hp + pokemon.getStats().evs.attack + pokemon.getStats().evs.defence + pokemon.getStats().evs.specialAttack + pokemon.getStats().evs.specialDefence + pokemon.getStats().evs.speed)*100)/510) + "%";
         if (pokemon.isEgg()) {
-            lore.add(TextFormatting.DARK_AQUA + "Pokemon: " + "???");
+            lore.add(regex(Translation.StatLore.egglore));
             return lore;
         } else {
-            lore.add(TextFormatting.GRAY + "Level" + TextFormatting.WHITE + ": " + TextFormatting.AQUA + pokemon.getLevel());
-            lore.add(TextFormatting.GRAY + "Ability" + TextFormatting.WHITE + ": " + TextFormatting.AQUA + pokemon.getAbility().getLocalizedName());
+            lore.add(regex(Translation.StatLore.levellore) + pokemon.getLevel());
+            lore.add(regex(Translation.StatLore.abilitylore) + pokemon.getAbility().getLocalizedName());
             noGender(pokemon, lore);
-            lore.add(TextFormatting.GRAY + "Nature" + TextFormatting.WHITE + ": " + TextFormatting.AQUA + pokemon.getNature());
-            lore.add(TextFormatting.GRAY + "Growth" + TextFormatting.WHITE + ": " + TextFormatting.AQUA + pokemon.getGrowth());
-            lore.add(TextFormatting.GRAY + "IVs" + TextFormatting.WHITE + ": ");
+            lore.add(regex(Translation.StatLore.naturelore) + pokemon.getNature());
+            lore.add(regex(Translation.StatLore.growthlore) + pokemon.getGrowth());
+            lore.add(regex(Translation.StatLore.IVslore));
             lore.add(TextFormatting.AQUA + "" + pokemon.getStats().ivs.hp + TextFormatting.GRAY + "/" + TextFormatting.AQUA + pokemon.getStats().ivs.attack + TextFormatting.GRAY + "/" + TextFormatting.AQUA + pokemon.getStats().ivs.defence + TextFormatting.GRAY + "/" + TextFormatting.AQUA + pokemon.getStats().ivs.specialAttack + TextFormatting.GRAY + "/" + TextFormatting.AQUA + pokemon.getStats().ivs.specialDefence + TextFormatting.GRAY + "/" + TextFormatting.AQUA + pokemon.getStats().ivs.speed + TextFormatting.GRAY + " [" + TextFormatting.AQUA + pokemon.getStats().ivs.getPercentage(0) + "%" + TextFormatting.GRAY + "]");
-            lore.add(TextFormatting.GRAY + "EVs" + TextFormatting.WHITE + ": ");
+            lore.add(regex(Translation.StatLore.EVslore));
             lore.add(TextFormatting.AQUA + "" + pokemon.getStats().evs.hp + TextFormatting.GRAY + "/" + TextFormatting.AQUA + pokemon.getStats().evs.attack + TextFormatting.GRAY + "/" + TextFormatting.AQUA + pokemon.getStats().evs.defence + TextFormatting.GRAY + "/" + TextFormatting.AQUA + pokemon.getStats().evs.specialAttack + TextFormatting.GRAY + "/" + TextFormatting.AQUA + pokemon.getStats().evs.specialDefence + TextFormatting.GRAY + "/" + TextFormatting.AQUA + pokemon.getStats().evs.speed + TextFormatting.GRAY + " [" + TextFormatting.AQUA + evPercentage + TextFormatting.GRAY + "]");
             return lore;
         }
     }
 
     private static void noGender(Pokemon pokemon, List<String> lore) {
-        if(!pokemon.getGender().name().equals("None")) {
-            lore.add(TextFormatting.GRAY + "Gender" + TextFormatting.WHITE + ": " + TextFormatting.AQUA + pokemon.getGender());
+        if(pokemon.getGender() != Gender.None) {
+            lore.add(Translation.StatLore.genderlore + pokemon.getGender());
         }
     }
 
-    public static List<String> getPriceAsLore(Pokemon pokemon) {
+    public static void getGSONContent(File json) {
+        JsonParser parser = new JsonParser();
+        try (FileReader fileReader = new FileReader(json)) {
+            JsonObject jsonObject = parser.parse(fileReader).getAsJsonObject();
+            for(Map.Entry<String, JsonElement> elem : jsonObject.entrySet()) {
+                JsonObject data = elem.getValue().getAsJsonObject();
+                JsonArray names = data.get("names").getAsJsonArray();
+                data.remove("names"); // might not be necessary
+
+                SellData selldata = gson.fromJson(data, SellData.class);
+                for (JsonElement s : names) {
+                    prices.put(s.getAsString(), selldata);
+                }
+            }
+        } catch (IOException | IllegalStateException exception) {
+            System.out.println(exception);
+        }
+    }
+
+    public static void writeGSONContent(File json) throws IOException {
+        FileWriter fileWriter = new FileWriter(json);
+        JsonObject jsonObject = new JsonObject();
+        JsonObject number1 = new JsonObject();
+        JsonObject number2 = new JsonObject();
+
+        JsonArray json1 = new JsonArray();
+        for(String s : EnumSpecies.legendaries) {
+            json1.add(s);
+        }
+        jsonObject.add("1", number1);
+        number1.add("names", json1);
+        number1.addProperty("base", Prices.Base * 2);
+        number1.addProperty("egg", Prices.Egg * 2);
+        number1.addProperty("shiny", Prices.Shiny * 2);
+        number1.addProperty("customtexture", Prices.CustomTexture * 2);
+        number1.addProperty("legendary", Prices.Legendary * 2);
+        number1.addProperty("maxIV", Prices.MaxIV * 2);
+        number1.addProperty("maxEV", Prices.MaxEV * 2);
+        number1.addProperty("level", Prices.Level * 2);
+        number1.addProperty("maxlevel", Prices.MaxLevel * 2);
+        number1.addProperty("HA", Prices.HA * 2);
+
+
+        JsonArray json2 = new JsonArray();
+        for(String s : EnumSpecies.ultrabeasts) {
+            json2.add(s);
+        }
+        jsonObject.add("2", number2);
+        number2.add("names", json2);
+        number2.addProperty("base", (int) (Prices.Base * 1.5));
+        number2.addProperty("egg", (int)(Prices.Egg * 1.5));
+        number2.addProperty("shiny", (int)(Prices.Shiny * 1.5));
+        number2.addProperty("customtexture", (int)(Prices.CustomTexture * 1.5));
+        number2.addProperty("ub", (int)(Prices.UltraBeast * 1.5));
+        number2.addProperty("maxIV", (int)(Prices.MaxIV * 1.5));
+        number2.addProperty("maxEV", (int)(Prices.MaxEV * 1.5));
+        number2.addProperty("level", (int)(Prices.Level * 1.5));
+        number2.addProperty("maxlevel", (int)(Prices.MaxLevel * 1.5));
+        number2.addProperty("HA", (int)(Prices.HA * 1.5));
+        fileWriter.write(gson.toJson(jsonObject));
+        fileWriter.flush();
+    }
+
+    private static List<String> getPriceAsLore(Pokemon pokemon) {
         List<String> lore = new ArrayList<>();
         if (!pokemon.isEgg()) {
             if (Boosters.Shiny) {
                 if (pokemon.isShiny()) {
-                    if (CustomGSON.egg.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        lore.add(Utils.regex("&bShiny: &f" + CustomGSON.egg.get(pokemon.getSpecies().getPokemonName())));
+                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
+                        lore.add(regex(Translation.PriceLore.shiny + prices.get(pokemon.getSpecies().getPokemonName()).shiny));
                     } else {
-                        lore.add(Utils.regex("&bShiny: &f" + Prices.Shiny));
+                        lore.add(regex(Translation.PriceLore.shiny + Prices.Shiny));
                     }
                 }
             }
             if (Boosters.CustomTexture) {
                 if (!pokemon.getCustomTexture().isEmpty()) {
-                    if (CustomGSON.customtexture.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        lore.add(Utils.regex("&bCustom Texture: &f" + CustomGSON.customtexture.get(pokemon.getSpecies().getPokemonName())));
+                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
+                        lore.add(regex(Translation.PriceLore.customtexture + prices.get(pokemon.getSpecies().getPokemonName()).customtexture));
                     } else {
-                        lore.add(Utils.regex("&bCustom Texture: &f" + Prices.CustomTexture));
+                        lore.add(regex(Translation.PriceLore.customtexture + Prices.CustomTexture));
                     }
                 }
             }
             if (Boosters.Legendary) {
                 if (pokemon.isLegendary()) {
-                    if (CustomGSON.legendary.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        lore.add(Utils.regex("&bLegendary: &f" + CustomGSON.legendary.get(pokemon.getSpecies().getPokemonName())));
+                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
+                        lore.add(regex(Translation.PriceLore.legendary + prices.get(pokemon.getSpecies().getPokemonName()).legendary));
                     } else {
-                        lore.add(Utils.regex("&bLegendary: &f" + Prices.Legendary));
+                        lore.add(regex(Translation.PriceLore.legendary + Prices.Legendary));
                     }
                 }
             }
             if (Boosters.UltraBeast) {
                 if (EnumSpecies.ultrabeasts.contains(pokemon.getSpecies().getPokemonName())) {
-                    if (CustomGSON.ub.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        lore.add(Utils.regex("&bUltra Beast: &f" + CustomGSON.ub.get(pokemon.getSpecies().getPokemonName())));
+                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
+                        lore.add(regex(Translation.PriceLore.ultrabeast + prices.get(pokemon.getSpecies().getPokemonName()).ub));
                     } else {
-                        lore.add(Utils.regex("&bUltra Beast: &f" + Prices.UltraBeast));
+                        lore.add(regex(Translation.PriceLore.ultrabeast + Prices.UltraBeast));
                     }
                 }
             }
@@ -116,10 +186,10 @@ public class Utils {
                         maxivs.add(x);
                     }
                 if (maxivs.size() != 0) {
-                    if (CustomGSON.maxIV.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        lore.add(Utils.regex("&d" + maxivs.size() + " &bMax IV(s): &f" + (CustomGSON.maxIV.get(pokemon.getSpecies().getPokemonName()) * maxivs.size())));
+                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
+                        lore.add(regex( Translation.PriceLore.maxIVEVnumbercolor + maxivs.size() + " " + Translation.PriceLore.maxIVs + (prices.get(pokemon.getSpecies().getPokemonName()).maxIV * maxivs.size())));
                     } else {
-                        lore.add(Utils.regex("&d" + maxivs.size() + " &bMax IV(s): &f" + (Prices.MaxIV * maxivs.size())));
+                        lore.add(regex( Translation.PriceLore.maxIVEVnumbercolor + maxivs.size() + " " + Translation.PriceLore.maxIVs + (Prices.MaxIV * maxivs.size())));
                     }
                 }
             }
@@ -130,63 +200,63 @@ public class Utils {
                         maxevs.add(x);
                     }
                 if (maxevs.size() != 0) {
-                    if (CustomGSON.maxEV.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        lore.add(Utils.regex("&d" + maxevs.size() + " &bMax EV(s): &f" + (CustomGSON.maxEV.get(pokemon.getSpecies().getPokemonName()) * maxevs.size())));
+                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
+                        lore.add(regex(Translation.PriceLore.maxIVEVnumbercolor + maxevs.size() + " " + Translation.PriceLore.maxEVs + (prices.get(pokemon.getSpecies().getPokemonName()).maxEV * maxevs.size())));
                     } else {
-                        lore.add(Utils.regex("&d" + maxevs.size() + " &bMax EV(s): &f" + (Prices.MaxEV * maxevs.size())));
+                        lore.add(regex(Translation.PriceLore.maxIVEVnumbercolor + maxevs.size() + " " + Translation.PriceLore.maxEVs + (Prices.MaxEV * maxevs.size())));
                     }
                 }
             }
             if (Boosters.Level) {
                 if (pokemon.getLevel() == 100) {
-                    if (CustomGSON.maxlevel.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        lore.add(Utils.regex("&bMax Level: &f" + CustomGSON.maxlevel.get(pokemon.getSpecies().getPokemonName())));
+                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
+                        lore.add(regex(Translation.PriceLore.maxLevel + prices.get(pokemon.getSpecies().getPokemonName()).maxlevel));
                     } else {
-                        lore.add(Utils.regex("&bMax Level: &f" + Prices.MaxLevel));
+                        lore.add(regex(Translation.PriceLore.maxLevel + Prices.MaxLevel));
                     }
                 } else {
-                    if (CustomGSON.level.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        lore.add(Utils.regex("&bLevel &d" + pokemon.getLevel() + "&b: &f" + (CustomGSON.level.get(pokemon.getSpecies().getPokemonName()) * pokemon.getLevel())));
+                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
+                        lore.add(regex(Translation.PriceLore.level + pokemon.getLevel() + Translation.PriceLore.levelpricecolor + (prices.get(pokemon.getSpecies().getPokemonName()).level * pokemon.getLevel())));
                     } else {
-                        lore.add(Utils.regex("&bLevel &d" + pokemon.getLevel() + "&b: &f" + (Prices.Level * pokemon.getLevel())));
+                        lore.add(regex(Translation.PriceLore.level + pokemon.getLevel() + Translation.PriceLore.levelpricecolor + (Prices.Level * pokemon.getLevel())));
                     }
                 }
             }
             if (Boosters.HA) {
                 if (pokemon.getAbilitySlot() == 2) {
-                    if (CustomGSON.HA.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        lore.add(Utils.regex("&bHidden Ability: &f" + CustomGSON.HA.get(pokemon.getSpecies().getPokemonName())));
+                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
+                        lore.add(regex(Translation.PriceLore.HA + prices.get(pokemon.getSpecies().getPokemonName()).HA));
                     } else {
-                        lore.add(Utils.regex("&bHidden Ability: &f" + Prices.HA));
+                        lore.add(regex(Translation.PriceLore.HA + Prices.HA));
                     }
                 }
             }
         }
         if (pokemon.isEgg() && Config.EggBool) {
-            if (CustomGSON.egg.containsKey(pokemon.getSpecies().getPokemonName())) {
-                lore.add(Utils.regex("&bEgg: &f" + CustomGSON.egg.get(pokemon.getSpecies().getPokemonName())));
+            if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
+                lore.add(regex(Translation.PriceLore.egg + prices.get(pokemon.getSpecies().getPokemonName()).egg));
             } else {
-                lore.add(Utils.regex("&bEgg: &f" + Prices.Egg));
+                lore.add(regex(Translation.PriceLore.egg + Prices.Egg));
             }
         } else if (pokemon.isEgg() && !Config.EggBool) {
         } else {
-            if (CustomGSON.base.containsKey(pokemon.getSpecies().getPokemonName())) {
-                lore.add(Utils.regex("&bBase price: &f" + CustomGSON.base.get(pokemon.getSpecies().getPokemonName())));
+            if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
+                lore.add(regex(Translation.PriceLore.base  + prices.get(pokemon.getSpecies().getPokemonName()).base));
             } else {
-                lore.add(Utils.regex("&bBase price: &f" + Prices.Base));
+                lore.add(regex(Translation.PriceLore.base + Prices.Base));
             }
-            lore.add(Utils.regex("&bTotal price: &f" + getPrice(pokemon)));
+            lore.add(regex(Translation.PriceLore.totalprice + getPrice(pokemon)));
         }
         return lore;
     }
 
-    public static int getPrice(Pokemon pokemon) {
+    static int getPrice(Pokemon pokemon) {
         int price = 0;
         if (!pokemon.isEgg()) {
             if (Boosters.Shiny) {
                 if (pokemon.isShiny()) {
-                    if (CustomGSON.shiny.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        price += CustomGSON.shiny.get(pokemon.getSpecies().getPokemonName());
+                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
+                        price += prices.get(pokemon.getSpecies().getPokemonName()).shiny;
                     } else {
                         price += Prices.Shiny;
                     }
@@ -194,8 +264,8 @@ public class Utils {
             }
             if (Boosters.CustomTexture) {
                 if (!pokemon.getCustomTexture().isEmpty()) {
-                    if (CustomGSON.customtexture.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        price += CustomGSON.customtexture.get(pokemon.getSpecies().getPokemonName());
+                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
+                        price += prices.get(pokemon.getSpecies().getPokemonName()).customtexture;
                     } else {
                         price += Prices.CustomTexture;
                     }
@@ -203,8 +273,8 @@ public class Utils {
             }
             if (Boosters.Legendary) {
                 if (pokemon.isLegendary()) {
-                    if (CustomGSON.legendary.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        price += CustomGSON.legendary.get(pokemon.getSpecies().getPokemonName());
+                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
+                        price += prices.get(pokemon.getSpecies().getPokemonName()).legendary;
                     } else {
                         price += Prices.Legendary;
                     }
@@ -212,8 +282,8 @@ public class Utils {
             }
             if (Boosters.UltraBeast) {
                 if (EnumSpecies.ultrabeasts.contains(pokemon.getSpecies().getPokemonName())) {
-                    if (CustomGSON.ub.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        price += CustomGSON.ub.get(pokemon.getSpecies().getPokemonName());
+                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
+                        price += prices.get(pokemon.getSpecies().getPokemonName()).ub;
                     } else {
                         price += Prices.UltraBeast;
                     }
@@ -226,8 +296,8 @@ public class Utils {
                         maxivs.add(x);
                     }
                 if (maxivs.size() != 0) {
-                    if (CustomGSON.maxIV.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        price += CustomGSON.maxIV.get(pokemon.getSpecies().getPokemonName()) * maxivs.size();
+                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
+                        price += prices.get(pokemon.getSpecies().getPokemonName()).maxIV * maxivs.size();
                     } else {
                         price += Prices.MaxIV * maxivs.size();
                     }
@@ -240,8 +310,8 @@ public class Utils {
                         maxevs.add(x);
                     }
                 if (maxevs.size() != 0) {
-                    if (CustomGSON.maxEV.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        price += CustomGSON.maxEV.get(pokemon.getSpecies().getPokemonName()) * maxevs.size();
+                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
+                        price += prices.get(pokemon.getSpecies().getPokemonName()).maxEV * maxevs.size();
                     } else {
                         price += Prices.MaxEV * maxevs.size();
                     }
@@ -249,14 +319,14 @@ public class Utils {
             }
             if (Boosters.Level) {
                 if (pokemon.getLevel() == 100) {
-                    if (CustomGSON.maxlevel.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        price += CustomGSON.maxlevel.get(pokemon.getSpecies().getPokemonName());
+                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
+                        price += prices.get(pokemon.getSpecies().getPokemonName()).maxlevel;
                     } else {
                         price += Prices.MaxLevel;
                     }
                 } else {
-                    if (CustomGSON.level.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        price += CustomGSON.level.get(pokemon.getSpecies().getPokemonName()) * pokemon.getLevel();
+                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
+                        price += prices.get(pokemon.getSpecies().getPokemonName()).level * pokemon.getLevel();
                     } else {
                         price += Prices.Level * pokemon.getLevel();
                     }
@@ -264,8 +334,8 @@ public class Utils {
             }
             if (Boosters.HA) {
                 if (pokemon.getAbilitySlot() == 2) {
-                    if (CustomGSON.HA.containsKey(pokemon.getSpecies().getPokemonName())) {
-                        price += CustomGSON.HA.get(pokemon.getSpecies().getPokemonName());
+                    if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
+                        price += prices.get(pokemon.getSpecies().getPokemonName()).HA;
                     } else {
                         price += Prices.HA;
                     }
@@ -273,15 +343,15 @@ public class Utils {
             }
         }
         if (pokemon.isEgg() && Config.EggBool) {
-            if (CustomGSON.egg.containsKey(pokemon.getSpecies().getPokemonName())) {
-                price += CustomGSON.egg.get(pokemon.getSpecies().getPokemonName());
+            if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
+                price += prices.get(pokemon.getSpecies().getPokemonName()).egg;
             } else {
                 price += Prices.Egg;
             }
         } else if (pokemon.isEgg() && !Config.EggBool) {
         } else {
-            if (CustomGSON.base.containsKey(pokemon.getSpecies().getPokemonName())) {
-                price += CustomGSON.base.get(pokemon.getSpecies().getPokemonName());
+            if (prices.containsKey(pokemon.getSpecies().getPokemonName())) {
+                price += prices.get(pokemon.getSpecies().getPokemonName()).base;
             } else {
                 price += Prices.Base;
             }
@@ -289,7 +359,7 @@ public class Utils {
         return price;
     }
 
-    public static List<Button> getBulkList(EntityPlayerMP player){
+    static List<Button> getBulkList(EntityPlayerMP player){
         ItemStack itemStackPhoto;
         List<Button> partyList = new ArrayList<>();
         for (Pokemon pokeStack : UIs.BulkList.get(player.getUniqueID())) {
@@ -307,7 +377,7 @@ public class Utils {
                 }
                 Button nullPokes = Button.builder()
                         .item(itemStackPhoto)
-                        .displayName(Utils.regex("&b&lEgg"))
+                        .displayName(regex(Translation.eggButton))
                         .onClick(action -> {
                             playerButton.put(player.getUniqueID(), action.getButton());
                             playerPokemon.put(player.getUniqueID(), pokeStack);
@@ -319,7 +389,7 @@ public class Utils {
             } else {
                 itemStackPhoto = getPokemonPhoto(pokeStack);
                 if (pokeStack.isShiny()) {
-                    itemStackPhoto.setStackDisplayName(TextFormatting.AQUA + "" + TextFormatting.BOLD + pokeStack.getDisplayName() + TextFormatting.GRAY + " [" + TextFormatting.GOLD + "Shiny" + TextFormatting.GRAY + "]");
+                    itemStackPhoto.setStackDisplayName(TextFormatting.AQUA + "" + TextFormatting.BOLD + pokeStack.getDisplayName() + regex(Translation.shinyInName));
                 } else if (!pokeStack.getCustomTexture().isEmpty()) {
                     itemStackPhoto.setStackDisplayName(TextFormatting.AQUA + "" + TextFormatting.BOLD + pokeStack.getDisplayName() + TextFormatting.GRAY + " [" + TextFormatting.AQUA + pokeStack.getCustomTexture() + TextFormatting.GRAY + "]");
                 } else if (!pokeStack.isShiny()) {
@@ -346,7 +416,7 @@ public class Utils {
         return partyList;
     }
 
-    public static List<Button> getPartyPokemonList(EntityPlayerMP player){
+    static List<Button> getPartyPokemonList(EntityPlayerMP player){
         PlayerPartyStorage party = Pixelmon.storageManager.getParty(player);
         ItemStack itemStackPhoto;
         List<Button> partyList = new ArrayList<>();
@@ -357,7 +427,7 @@ public class Utils {
                         .item(itemStackPhoto)
                         .build();
                 partyList.add(nullPokes);
-                itemStackPhoto.setStackDisplayName(TextFormatting.RED + "Empty Party Slot");
+                itemStackPhoto.setStackDisplayName(regex(Translation.emptyPartySlot));
             } else if (pokeStack.isEgg()) {
                 itemStackPhoto = new ItemStack(PixelmonItems.itemPixelmonSprite);
                 NBTTagCompound nbt = new NBTTagCompound();
@@ -373,14 +443,14 @@ public class Utils {
                 if (!Config.EggBool) {
                     Button nullPokes = Button.builder()
                             .item(itemStackPhoto)
-                            .displayName(Utils.regex("&b&lEgg"))
+                            .displayName(regex(Translation.eggButton))
                             .lore(lore)
                             .build();
                     partyList.add(nullPokes);
                 } else {
                     Button nullPokes = Button.builder()
                             .item(itemStackPhoto)
-                            .displayName(Utils.regex("&b&lEgg"))
+                            .displayName(regex(Translation.eggButton))
                             .onClick((action) -> {
                                 playerButton.put(player.getUniqueID(), action.getButton());
                                 playerPokemon.put(player.getUniqueID(), pokeStack);
@@ -393,7 +463,7 @@ public class Utils {
             } else {
                 itemStackPhoto = getPokemonPhoto(pokeStack);
                 if (pokeStack.isShiny()) {
-                    itemStackPhoto.setStackDisplayName(TextFormatting.AQUA + "" + TextFormatting.BOLD + pokeStack.getDisplayName() + TextFormatting.GRAY + " [" + TextFormatting.GOLD + "Shiny" + TextFormatting.GRAY + "]");
+                    itemStackPhoto.setStackDisplayName(TextFormatting.AQUA + "" + TextFormatting.BOLD + pokeStack.getDisplayName() + regex(Translation.shinyInName));
                 } else if (!pokeStack.getCustomTexture().isEmpty()) {
                     itemStackPhoto.setStackDisplayName(TextFormatting.AQUA + "" + TextFormatting.BOLD + pokeStack.getDisplayName() + TextFormatting.GRAY + " [" + TextFormatting.AQUA + pokeStack.getCustomTexture() + TextFormatting.GRAY + "]");
                 } else if (!pokeStack.isShiny()) {
@@ -420,14 +490,14 @@ public class Utils {
         return partyList;
     }
 
-    public static List<Button> getPCPokemonList(EntityPlayerMP player){
+    static List<Button> getPCPokemonList(EntityPlayerMP player){
         PCStorage pc = Pixelmon.storageManager.getPCForPlayer(player);
         ItemStack itemStackPhoto;
         List<Button> pcList = new ArrayList<>();
         for (Pokemon pokeStack : pc.getAll()) {
             if (pokeStack == null) {
                 itemStackPhoto = new ItemStack(Blocks.STAINED_GLASS_PANE, 1, 7);
-                itemStackPhoto.setStackDisplayName(TextFormatting.RED + "Empty PC Slot");
+                itemStackPhoto.setStackDisplayName(regex(Translation.emptyPCSlot));
                 Button nullPokes = Button.builder()
                         .item(itemStackPhoto)
                         .build();
@@ -447,14 +517,14 @@ public class Utils {
                 if (!Config.EggBool) {
                     Button nullPokes = Button.builder()
                             .item(itemStackPhoto)
-                            .displayName(Utils.regex("&b&lEgg"))
+                            .displayName(regex(Translation.eggButton))
                             .lore(lore)
                             .build();
                     pcList.add(nullPokes);
                 } else {
                     Button nullPokes = Button.builder()
                             .item(itemStackPhoto)
-                            .displayName(Utils.regex("&b&lEgg"))
+                            .displayName(regex(Translation.eggButton))
                             .onClick((action) -> {
                                 playerButton.put(action.getPlayer().getUniqueID(), action.getButton());
                                 playerPokemon.put(action.getPlayer().getUniqueID(), pokeStack);
@@ -471,7 +541,7 @@ public class Utils {
             } else {
                 itemStackPhoto = getPokemonPhoto(pokeStack);
                 if (pokeStack.isShiny()) {
-                    itemStackPhoto.setStackDisplayName(TextFormatting.AQUA + "" + TextFormatting.BOLD + pokeStack.getDisplayName() + TextFormatting.GRAY + " [" + TextFormatting.GOLD + "Shiny" + TextFormatting.GRAY + "]");
+                    itemStackPhoto.setStackDisplayName(TextFormatting.AQUA + "" + TextFormatting.BOLD + pokeStack.getDisplayName() + regex(Translation.shinyInName));
                 } else if (!pokeStack.getCustomTexture().isEmpty()) {
                     itemStackPhoto.setStackDisplayName(TextFormatting.AQUA + "" + TextFormatting.BOLD + pokeStack.getDisplayName() + TextFormatting.GRAY + " [" + TextFormatting.AQUA + pokeStack.getCustomTexture() + TextFormatting.GRAY + "]");
                 } else if (!pokeStack.isShiny()) {
@@ -502,7 +572,7 @@ public class Utils {
         return pcList;
     }
 
-    public static ItemStack getPokemonPhoto(Pokemon pokemon){
+    private static ItemStack getPokemonPhoto(Pokemon pokemon){
         ItemStack itemStack = new ItemStack(PixelmonItems.itemPixelmonSprite);
         NBTTagCompound tagCompound = new NBTTagCompound();
         itemStack.setTagCompound(tagCompound);
@@ -513,7 +583,7 @@ public class Utils {
         return itemStack;
     }
 
-    public static void logger(EntityPlayerMP player, Pokemon pokemon) throws IOException {
+    static void logger(EntityPlayerMP player, Pokemon pokemon) throws IOException {
         FileWriter writer = new FileWriter(PixelmonSTS.stsLog, true);
         if (PixelmonSTS.stsLog.length() == 0) {
             writer.write(dtf.format(now) + " " + player.getName() + " has traded a " + pokemon.getSpecies().getPokemonName());
@@ -523,7 +593,7 @@ public class Utils {
         writer.close();
     }
 
-    public static void logger(EntityPlayerMP player, List<Pokemon> pokemonList) throws IOException {
+    static void logger(EntityPlayerMP player) throws IOException {
         FileWriter writer = new FileWriter(PixelmonSTS.stsLog, true);
         if (PixelmonSTS.stsLog.length() == 0) {
             writer.write(dtf.format(now) + " " + player.getName() + " has traded in these pokemon: " + "(" + String.join(", ", UIs.BulkList.get(player.getUniqueID()).toString()) + ")");
@@ -533,7 +603,7 @@ public class Utils {
         writer.close();
     }
 
-    public static long secondsleft(EntityPlayerMP player) {
+    static long secondsleft(EntityPlayerMP player) {
         User user = PixelmonSTS.api.getUserManager().getUser(player.getUniqueID());
         CachedMetaData metaData = null;
         if (user != null) {
@@ -553,7 +623,7 @@ public class Utils {
         }
     }
 
-    public static void enoughMoney(EntityPlayerMP player) {
+    static void enoughMoney(EntityPlayerMP player) {
         Optional<UniqueAccount> uOpt = PixelmonSTS.economyService.getOrCreateAccount(player.getUniqueID());
         if (uOpt.isPresent()) {
             UniqueAccount acc = uOpt.get();
@@ -562,10 +632,10 @@ public class Utils {
             if (result.getResult() == ResultType.SUCCESS) {
                 UIs.cooldownMap.remove(player.getUniqueID());
                 InventoryAPI.getInstance().closePlayerInventory(player);
-                player.sendMessage(new TextComponentString(regex("&bYou have reset your cooldown!")));
+                player.sendMessage(new TextComponentString(regex(Translation.cooldownResetMessage)));
             } else if (result.getResult() == ResultType.FAILED || result.getResult() == ResultType.ACCOUNT_NO_FUNDS || result.getResult() == ResultType.ACCOUNT_NO_SPACE) {
                 InventoryAPI.getInstance().closePlayerInventory(player);
-                player.sendMessage(new TextComponentString(regex("&cYou don't have enough money to reset your cooldown!")));
+                player.sendMessage(new TextComponentString(regex(Translation.notEnoughMoneyMessage)));
             } else {
                 System.out.println("Error, contact mod author");
             }
@@ -574,7 +644,7 @@ public class Utils {
         }
     }
 
-    public static String egg(Pokemon pokemon) {
+    private static String egg(Pokemon pokemon) {
         EnumSpecies species = pokemon.getSpecies();
         int cycles = pokemon.getEggCycles();
         return "pixelmon:sprites/eggs/"
@@ -582,7 +652,7 @@ public class Utils {
                 + (cycles > 10 ? "1" : cycles > 5 ? "2" : "3");
     }
 
-    public static void trade(EntityPlayerMP player, Pokemon pokemon) {
+    static void trade(EntityPlayerMP player, Pokemon pokemon) {
         Optional<UniqueAccount> uOpt = PixelmonSTS.economyService.getOrCreateAccount(player.getUniqueID());
         if (uOpt.isPresent()) {
             UniqueAccount acc = uOpt.get();
@@ -591,7 +661,7 @@ public class Utils {
             if (result.getResult() == ResultType.SUCCESS) {
                 Pixelmon.storageManager.getParty(player).set(Pixelmon.storageManager.getParty(player).getSlot(pokemon), null);
                 InventoryAPI.getInstance().closePlayerInventory(player);
-                player.sendMessage(new TextComponentString(regex("&bYou have sold your pokemon for &6" + getPrice(pokemon) + "&b!")));
+                player.sendMessage(new TextComponentString(regex(Translation.soldPokemonForMessage + getPrice(pokemon) + Translation.exclamationPointcolor)));
             } else {
                 System.out.println("Error, contact mod author");
             }
@@ -600,7 +670,7 @@ public class Utils {
         }
     }
 
-    public static void bulkTrade(EntityPlayerMP player) {
+    static void bulkTrade(EntityPlayerMP player) {
         Optional<UniqueAccount> uOpt = PixelmonSTS.economyService.getOrCreateAccount(player.getUniqueID());
         if (uOpt.isPresent()) {
             UniqueAccount acc = uOpt.get();
@@ -611,10 +681,10 @@ public class Utils {
             TransactionResult result = acc.deposit(PixelmonSTS.currency, requiredamount, Sponge.getCauseStackManager().getCurrentCause());
             if (result.getResult() == ResultType.SUCCESS) {
                 for (Pokemon pokemon : UIs.BulkList.get(player.getUniqueID())) {
-                    Pixelmon.storageManager.getParty(player).set(Pixelmon.storageManager.getParty(player).getSlot(pokemon), null);
+                    Pixelmon.storageManager.getPCForPlayer(player).set(Pixelmon.storageManager.getPCForPlayer(player).getPosition(pokemon), null);
                 }
                 InventoryAPI.getInstance().closePlayerInventory(player);
-                player.sendMessage(new TextComponentString(regex("&bYou sold all your pokemon for &6" + requiredamount + "&b!")));
+                player.sendMessage(new TextComponentString(regex(Translation.soldAllPokemonForMessage + requiredamount + Translation.exclamationPointcolor)));
             } else {
                 InventoryAPI.getInstance().closePlayerInventory(player);
                 player.sendMessage(new TextComponentString(regex("&cError, contact mod author")));
@@ -624,7 +694,7 @@ public class Utils {
         }
     }
 
-    public static void tradePC(EntityPlayerMP player, Pokemon pokemon) {
+    static void tradePC(EntityPlayerMP player, Pokemon pokemon) {
         Optional<UniqueAccount> uOpt = PixelmonSTS.economyService.getOrCreateAccount(player.getUniqueID());
         if (uOpt.isPresent()) {
             UniqueAccount acc = uOpt.get();
@@ -633,7 +703,7 @@ public class Utils {
             if (result.getResult() == ResultType.SUCCESS) {
                 Pixelmon.storageManager.getPCForPlayer(player).set(Pixelmon.storageManager.getPCForPlayer(player).getPosition(pokemon), null);
                 InventoryAPI.getInstance().closePlayerInventory(player);
-                player.sendMessage(new TextComponentString(regex("&bYou have sold your pokemon for &6" + getPrice(pokemon) + " &b!")));
+                player.sendMessage(new TextComponentString(regex(Translation.soldPokemonForMessage + getPrice(pokemon) + Translation.exclamationPointcolor)));
             } else {
                 System.out.println("Error, contact mod author");
             }
@@ -642,7 +712,8 @@ public class Utils {
         }
     }
 
-    public static String regex(String line) {
+    static String regex(String line) {
+        String regex = "&(?=[123456789abcdefklmnor])";
         Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(line);
         if (matcher.find()) {

@@ -2,7 +2,7 @@ package io.github.theknightkarim.configs;
 
 import io.github.theknightkarim.PixelmonSTS;
 
-@net.minecraftforge.common.config.Config(modid = PixelmonSTS.MOD_ID, name = PixelmonSTS.MOD_NAME + "/config.cfg")
+@net.minecraftforge.common.config.Config(modid = PixelmonSTS.MOD_ID, name = PixelmonSTS.MOD_NAME + "/config")
 public class Config {
 
     @net.minecraftforge.common.config.Config.Comment({
@@ -27,6 +27,11 @@ public class Config {
     })
     @net.minecraftforge.common.config.Config.RangeInt(min = 0, max = Integer.MAX_VALUE)
     public static int CooldownPaymentPrice = 50000;
+
+    @net.minecraftforge.common.config.Config.Comment({
+            "Currency name (Coin is default)"
+    })
+    public static String currency = "Coin";
 
     @net.minecraftforge.common.config.Config.Comment({
             "Set to true if you want to make eggs sellable"

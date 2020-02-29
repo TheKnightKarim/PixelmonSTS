@@ -79,7 +79,10 @@ public class UIs {
         Button back = Button.builder()
                 .item(new ItemStack(PixelmonItems.LtradeHolderLeft))
                 .displayName(Utils.regex("&cBack to main menu"))
-                .onClick(action -> menuUI(player).forceOpenPage(player))
+                .onClick(action -> {
+                    UIs.BulkList.get(player.getUniqueID()).clear();
+                    menuUI(player).forceOpenPage(player);
+                })
                 .build();
 
         Button first = Button.builder()
@@ -459,7 +462,7 @@ public class UIs {
                         .displayName(Utils.regex("&cRemove pokemon from Bulk List"))
                         .onClick(action -> {
                             BulkList.get(player.getUniqueID()).remove(Utils.playerPokemon.get(player.getUniqueID()));
-                            menuUI(player).forceOpenPage(player);
+                            pcUI(player).forceOpenPage(player);
                         })
                         .lore(lore)
                         .build();
@@ -470,7 +473,7 @@ public class UIs {
                         .onClick(action -> {
                             pokemonList.add(Utils.playerPokemon.get(player.getUniqueID()));
                             BulkList.put(player.getUniqueID(), pokemonList);
-                            menuUI(player).forceOpenPage(player);
+                            pcUI(player).forceOpenPage(player);
                         })
                         .build();
             }
@@ -481,7 +484,7 @@ public class UIs {
                     .onClick(action -> {
                         pokemonList.add(Utils.playerPokemon.get(player.getUniqueID()));
                         BulkList.put(player.getUniqueID(), pokemonList);
-                        menuUI(player).forceOpenPage(player);
+                        pcUI(player).forceOpenPage(player);
                     })
                     .build();
         }
@@ -530,7 +533,7 @@ public class UIs {
                                 } else {
                                     Utils.bulkTrade(player);
                                     try {
-                                        Utils.logger(player, UIs.BulkList.get(player.getUniqueID()));
+                                        Utils.logger(player);
                                     } catch (IOException e) {
                                         e.printStackTrace();
                                     }
@@ -550,7 +553,7 @@ public class UIs {
                                     cooldownMap.put(player.getUniqueID(), System.currentTimeMillis());
                                     Utils.bulkTrade(player);
                                     try {
-                                        Utils.logger(player, UIs.BulkList.get(player.getUniqueID()));
+                                        Utils.logger(player);
                                     } catch (IOException e) {
                                         e.printStackTrace();
                                     }
@@ -570,7 +573,7 @@ public class UIs {
                                 cooldownMap.put(player.getUniqueID(), System.currentTimeMillis());
                                 Utils.bulkTrade(player);
                                 try {
-                                    Utils.logger(player, UIs.BulkList.get(player.getUniqueID()));
+                                    Utils.logger(player);
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
@@ -593,7 +596,7 @@ public class UIs {
                                 } else {
                                     Utils.bulkTrade(player);
                                     try {
-                                        Utils.logger(player, BulkList.get(player.getUniqueID()));
+                                        Utils.logger(player);
                                     } catch (IOException e) {
                                         e.printStackTrace();
                                     }
@@ -613,7 +616,7 @@ public class UIs {
                                     cooldownMap.put(player.getUniqueID(), System.currentTimeMillis());
                                     Utils.bulkTrade(player);
                                     try {
-                                        Utils.logger(player, BulkList.get(player.getUniqueID()));
+                                        Utils.logger(player);
                                     } catch (IOException e) {
                                         e.printStackTrace();
                                     }
@@ -633,7 +636,7 @@ public class UIs {
                                 cooldownMap.put(player.getUniqueID(), System.currentTimeMillis());
                                 Utils.bulkTrade(player);
                                 try {
-                                    Utils.logger(player, BulkList.get(player.getUniqueID()));
+                                    Utils.logger(player);
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
@@ -649,7 +652,7 @@ public class UIs {
                     .onClick(action -> {
                         Utils.bulkTrade(player);
                         try {
-                            Utils.logger(player, BulkList.get(player.getUniqueID()));
+                            Utils.logger(player);
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -714,30 +717,6 @@ public class UIs {
                 .build();
     }
 
-    private static Button bulk(EntityPlayerMP player) {
-        boolean bulkOrNotbool = bulkOrNot.get(player.getUniqueID()) != null;
-        String line;
-        if (bulkOrNotbool) {
-            line = "&bBulk: &aTrue";
-        } else {
-            line = "&bBulk: &cFalse";
-        }
-
-        return Button.builder()
-                .item(new ItemStack(PixelmonBlocks.blackVendingMachineBlock))
-                .displayName(Utils.regex(line))
-                .onClick(action -> {
-                    if (bulkOrNotbool) {
-                        bulkOrNot.remove(player.getUniqueID()); // True - 1
-                    } else {
-                        bulkOrNot.remove(player.getUniqueID()); // False - 2
-                        bulkOrNot.put(player.getUniqueID(), false);
-                    }
-                    menuUI(player).forceOpenPage(player);
-                })
-                .build();
-    }
-
     private static Button bulkPC(EntityPlayerMP player) {
         boolean bulkOrNotbool = bulkOrNot.get(player.getUniqueID()) != null;
         String line;
@@ -756,6 +735,9 @@ public class UIs {
                     } else {
                         bulkOrNot.remove(player.getUniqueID()); // False - 2
                         bulkOrNot.put(player.getUniqueID(), false);
+                        if (UIs.BulkList.get(player.getUniqueID()) != null) {
+                            UIs.BulkList.get(player.getUniqueID()).clear();
+                        }
                     }
                     pcUI(player).forceOpenPage(player);
                 })
@@ -808,7 +790,7 @@ public class UIs {
         ItemStack itemStack = new ItemStack(PixelmonItems.unoOrb, 1, meta);
         NBTTagCompound nbtTagCompound = new NBTTagCompound();
         nbtTagCompound.setInteger("Unbreakable", 1);
-        nbtTagCompound.setInteger("HideFlags", 2);
+        nbtTagCompound.setInteger("HideFlags", 4);
         itemStack.setTagCompound(nbtTagCompound);
 
         return Button.builder()

@@ -1,8 +1,9 @@
 package io.github.theknightkarim;
 
 import ca.landonjw.gooeylibs.inventory.api.InventoryAPI;
+import io.github.theknightkarim.configs.Config;
 import io.github.theknightkarim.utils.Command;
-import io.github.theknightkarim.utils.CustomGSON;
+import io.github.theknightkarim.utils.Utils;
 import net.luckperms.api.LuckPerms;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
@@ -42,7 +43,7 @@ public class PixelmonSTS {
         } else {
             economyService = serviceOpt.get();
         }
-        Optional<Currency> currencyCheck = Sponge.getRegistry().getType(org.spongepowered.api.service.economy.Currency.class, "economylite:coin");
+        Optional<Currency> currencyCheck = Sponge.getRegistry().getType(org.spongepowered.api.service.economy.Currency.class, "economylite:" + Config.currency.toLowerCase());
         if (!currencyCheck.isPresent()) {
             System.out.println("Config currency is not recognized, Default currency is set");
             currency = economyService.getDefaultCurrency();
@@ -74,12 +75,12 @@ public class PixelmonSTS {
         if (!filexists) {
             try {
                 filexists = customprices.createNewFile();
-                CustomGSON.writeGSONContent();
+                Utils.writeGSONContent(customprices);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
-        CustomGSON.getGSONContent();
+        Utils.getGSONContent(customprices);
 
 
         // STS Log
