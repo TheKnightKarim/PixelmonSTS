@@ -190,11 +190,13 @@ public class Utils {
             	lore.add(regex(Translation.PriceLore.maxIVEVnumbercolor + max + " " + Translation.PriceLore.maxEVs + (sd.maxEV * max)));
         }
         if (pokemon.getLevel() == PixelmonConfig.maxLevel) {
+	    if (sd.maxlevel > 0)	
         	lore.add(regex(Translation.PriceLore.maxLevel + sd.maxlevel));
         } else {
+	    if (sd.level > 0)
         	 lore.add(regex(Translation.PriceLore.level + pokemon.getLevel() + Translation.PriceLore.levelpricecolor + (sd.level * pokemon.getLevel())));
         }
-        if (pokemon.getAbilitySlot() == 2)
+        if (sd.ha > 0 && pokemon.getAbilitySlot() == 2)
         	lore.add(regex(Translation.PriceLore.HA + sd.HA));
         
         lore.add(regex(Translation.PriceLore.totalprice + getPrice(pokemon)));
