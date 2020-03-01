@@ -28,7 +28,7 @@ public class PixelmonSTS {
 
     public static final String MOD_ID = "pixelmonsts";
     public static final String MOD_NAME = "PixelmonSTS";
-    public static final String VERSION = "1.0.0";
+    public static final String VERSION = "1.1.1";
     public static File stsLog;
     public static File customprices;
     public static EconomyService economyService;
@@ -36,7 +36,7 @@ public class PixelmonSTS {
     public static LuckPerms api;
 
     @Mod.EventHandler
-    public void preInit(FMLPreInitializationEvent event) throws IOException {
+    public void preInit(FMLPreInitializationEvent event) {
         Optional<EconomyService> serviceOpt = Sponge.getServiceManager().provide(EconomyService.class);
         if (!serviceOpt.isPresent()) {
             System.out.println("Server doesn't have a economy plugin, PixelmonSTS won't work properly");
