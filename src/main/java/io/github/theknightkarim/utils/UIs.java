@@ -27,7 +27,6 @@ public class UIs {
     public static HashMap<UUID, Long> cooldownMap = new HashMap<>();
     public static HashMap<UUID, Boolean> DescOrPrice = new HashMap<>();
     public static HashMap<UUID, List<Pokemon>> BulkList = new HashMap<>();
-    public static List<Pokemon> pokemonList = new ArrayList<>();
 
     public static Page menuUI(EntityPlayerMP player) {
         Button pc = Button.builder()
@@ -471,8 +470,7 @@ public class UIs {
                         .item(new ItemStack(Items.DYE, 1 , 10))
                         .displayName(Utils.regex("&aAdd pokemon to Bulk List"))
                         .onClick(action -> {
-                            pokemonList.add(Utils.playerPokemon.get(player.getUniqueID()));
-                            BulkList.put(player.getUniqueID(), pokemonList);
+                            BulkList.get(player.getUniqueID()).add(Utils.playerPokemon.get(player.getUniqueID()));
                             pcUI(player).forceOpenPage(player);
                         })
                         .build();
@@ -482,8 +480,8 @@ public class UIs {
                     .item(new ItemStack(Items.DYE, 1 , 10))
                     .displayName(Utils.regex("&aAdd pokemon to Bulk List"))
                     .onClick(action -> {
-                        pokemonList.add(Utils.playerPokemon.get(player.getUniqueID()));
-                        BulkList.put(player.getUniqueID(), pokemonList);
+                        BulkList.put(player.getUniqueID(), new ArrayList<>());
+                        BulkList.get(player.getUniqueID()).add(Utils.playerPokemon.get(player.getUniqueID()));
                         pcUI(player).forceOpenPage(player);
                     })
                     .build();
