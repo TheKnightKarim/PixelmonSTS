@@ -2,6 +2,7 @@ package io.github.theknightkarim.utils;
 
 import ca.landonjw.gooeylibs.inventory.api.*;
 import com.pixelmonmod.pixelmon.api.pokemon.Pokemon;
+import com.pixelmonmod.pixelmon.api.storage.StoragePosition;
 import com.pixelmonmod.pixelmon.config.PixelmonBlocks;
 import com.pixelmonmod.pixelmon.config.PixelmonItems;
 import com.pixelmonmod.pixelmon.config.PixelmonItemsHeld;
@@ -471,7 +472,14 @@ public class UIs {
                         .displayName(Utils.regex("&aAdd pokemon to Bulk List"))
                         .onClick(action -> {
                             BulkList.get(player.getUniqueID()).add(Utils.playerPokemon.get(player.getUniqueID()));
-                            pcUI(player).forceOpenPage(player);
+                            StoragePosition storagePosition = Utils.playerPokemon.get(player.getUniqueID()).getPosition();
+                            if (storagePosition != null) {
+                                if (pcUI(player).getPage(storagePosition.box + 1).isPresent()) {
+                                    pcUI(player).getPage(storagePosition.box + 1).get().forceOpenPage(player);
+                                }
+                            } else {
+                                pcUI(player).forceOpenPage(player);
+                            }
                         })
                         .build();
             }
@@ -588,18 +596,6 @@ public class UIs {
                     confirmOrCooldownButton = Button.builder()
                             .item(new ItemStack(PixelmonItems.hourglassGold))
                             .displayName(Utils.regex("&7Cooldown"))
-                            .onClick((action) -> {
-                                if (Utils.secondsleft(player) > 0) {
-                                    Utils.enoughMoney(player);
-                                } else {
-                                    Utils.bulkTrade(player);
-                                    try {
-                                        Utils.logger(player);
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-                            })
                             .lore(lore)
                             .build();
                 } else {
@@ -645,15 +641,21 @@ public class UIs {
             }
         } else {
             confirmOrCooldownButton = Button.builder()
-                    .item(new ItemStack(Items.DYE, 1, 10))
+                    .item(new ItemStack(Items.DYE, 1 , 10))
                     .displayName(Utils.regex("&aConfirm"))
                     .onClick(action -> {
-                        Utils.bulkTrade(player);
-                        try {
-                            Utils.logger(player);
-                        } catch (IOException e) {
-                            e.printStackTrace();
+                        if (Utils.playerPokemon.get(action.getPlayer().getUniqueID()).hasSpecFlag("untradeable")) {
+                            player.sendMessage(new TextComponentString(Utils.regex("&cYour pokemon is untradeable!")));
+                        } else {
+                            cooldownMap.put(player.getUniqueID(), System.currentTimeMillis());
+                            Utils.bulkTrade(player);
+                            try {
+                                Utils.logger(player);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
                         }
+                        InventoryAPI.getInstance().closePlayerInventory(player);
                     })
                     .build();
         }

@@ -45,5 +45,6 @@ public class Translation {
     public static String soldAllPokemonForMessage = "&bYou sold all your pokemon for &6";
     public static String exclamationPointcolor = "&b!";
     public static String shinyInName = "&7[&6Shiny&7]";
+    public static String lastpokemoninparty = "&cYou have only one pokemon! You can't trade it away";
 
 }

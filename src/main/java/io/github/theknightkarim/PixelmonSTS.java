@@ -28,7 +28,7 @@ public class PixelmonSTS {
 
     public static final String MOD_ID = "pixelmonsts";
     public static final String MOD_NAME = "PixelmonSTS";
-    public static final String VERSION = "1.1.2";
+    public static final String VERSION = "1.1.3";
     public static File stsLog;
     public static File customprices;
     public static EconomyService economyService;

@@ -20,8 +20,11 @@ import io.github.theknightkarim.configs.Prices;
 import io.github.theknightkarim.configs.Translation;
 import net.luckperms.api.cacheddata.CachedMetaData;
 import net.luckperms.api.model.user.User;
+import net.minecraft.enchantment.Enchantment;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
+import net.minecraft.init.Enchantments;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.text.TextComponentString;
@@ -339,6 +342,18 @@ public class Utils {
                             .build();
                     partyList.add(nullPokes);
                 } else {
+                    if (party.getAll().length == 1) {
+                        Button nullPokes = Button.builder()
+                                .item(itemStackPhoto)
+                                .displayName(regex(Translation.eggButton))
+                                .onClick((action) -> {
+                                    InventoryAPI.getInstance().closePlayerInventory(player);
+                                    player.sendMessage(new TextComponentString(Utils.regex(Translation.lastpokemoninparty)));
+                                })
+                                .lore(lore)
+                                .build();
+                        partyList.add(nullPokes);
+                    }
                     Button nullPokes = Button.builder()
                             .item(itemStackPhoto)
                             .displayName(regex(Translation.eggButton))
@@ -366,16 +381,53 @@ public class Utils {
                 } else {
                     lore = getPriceAsLore(pokeStack);
                 }
-                Button pokes = Button.builder()
-                        .item(itemStackPhoto)
-                        .onClick((action) -> {
-                            playerButton.put(action.getPlayer().getUniqueID(), action.getButton());
-                            playerPokemon.put(action.getPlayer().getUniqueID(), pokeStack);
-                            UIs.confirmationUI(player).forceOpenPage(player);
-                        })
-                        .lore(lore)
-                        .build();
-                partyList.add(pokes);
+                if (!Config.EggBool) {
+                    if (party.getTeam().size() >= 1) {
+                        Button pokes = Button.builder()
+                                .item(itemStackPhoto)
+                                .onClick((action) -> {
+                                    InventoryAPI.getInstance().closePlayerInventory(player);
+                                    player.sendMessage(new TextComponentString(Translation.lastpokemoninparty));
+                                })
+                                .lore(lore)
+                                .build();
+                        partyList.add(pokes);
+                    } else {
+                        Button pokes = Button.builder()
+                                .item(itemStackPhoto)
+                                .onClick((action) -> {
+                                    playerButton.put(action.getPlayer().getUniqueID(), action.getButton());
+                                    playerPokemon.put(action.getPlayer().getUniqueID(), pokeStack);
+                                    UIs.confirmationUI(player).forceOpenPage(player);
+                                })
+                                .lore(lore)
+                                .build();
+                        partyList.add(pokes);
+                    }
+                } else {
+                    if (party.getAll().length == 1) {
+                        Button pokes = Button.builder()
+                                .item(itemStackPhoto)
+                                .onClick((action) -> {
+                                    InventoryAPI.getInstance().closePlayerInventory(player);
+                                    player.sendMessage(new TextComponentString(Translation.lastpokemoninparty));
+                                })
+                                .lore(lore)
+                                .build();
+                        partyList.add(pokes);
+                    } else {
+                        Button pokes = Button.builder()
+                                .item(itemStackPhoto)
+                                .onClick((action) -> {
+                                    playerButton.put(action.getPlayer().getUniqueID(), action.getButton());
+                                    playerPokemon.put(action.getPlayer().getUniqueID(), pokeStack);
+                                    UIs.confirmationUI(player).forceOpenPage(player);
+                                })
+                                .lore(lore)
+                                .build();
+                        partyList.add(pokes);
+                    }
+                }
             }
         }
         return partyList;
@@ -397,6 +449,12 @@ public class Utils {
                 itemStackPhoto = new ItemStack(PixelmonItems.itemPixelmonSprite);
                 NBTTagCompound nbt = new NBTTagCompound();
                 nbt.setString("SpriteName", egg(pokeStack));
+                if (UIs.BulkList.get(player.getUniqueID()).contains(pokeStack)) {
+                    HashMap<Enchantment, Integer> enchantmentIntegerHashMap = new HashMap<>();
+                    enchantmentIntegerHashMap.put(Enchantments.SHARPNESS, 1);
+                    EnchantmentHelper.setEnchantments(enchantmentIntegerHashMap, itemStackPhoto);
+                    nbt.setInteger("HideFlags", 1);
+                }
                 itemStackPhoto.setTagCompound(nbt);
                 itemStackPhoto.setStackDisplayName(pokeStack.getDisplayName());
                 List<String> lore;
@@ -431,6 +489,14 @@ public class Utils {
                 }
             } else {
                 itemStackPhoto = getPokemonPhoto(pokeStack);
+                if (UIs.BulkList.get(player.getUniqueID()).contains(pokeStack)) {
+                    HashMap<Enchantment, Integer> enchantmentIntegerHashMap = new HashMap<>();
+                    enchantmentIntegerHashMap.put(Enchantments.SHARPNESS, 1);
+                    EnchantmentHelper.setEnchantments(enchantmentIntegerHashMap, itemStackPhoto);
+                    NBTTagCompound nbt = new NBTTagCompound();
+                    nbt.setInteger("HideFlags", 1);
+                    itemStackPhoto.setTagCompound(nbt);
+                }
                 if (pokeStack.isShiny()) {
                     itemStackPhoto.setStackDisplayName(TextFormatting.AQUA + "" + TextFormatting.BOLD + pokeStack.getDisplayName() + regex(Translation.shinyInName));
                 } else if (!pokeStack.getCustomTexture().isEmpty()) {
