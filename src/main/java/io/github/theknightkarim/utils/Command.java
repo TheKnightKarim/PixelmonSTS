@@ -22,21 +22,25 @@ public class Command extends CommandBase {
     public void execute(MinecraftServer server, ICommandSender sender, String[] args) {
         if (sender instanceof EntityPlayerMP) {
             EntityPlayerMP player = (EntityPlayerMP) sender;
-            if (args.length == 1) {
-                EntityPlayerMP player2 = server.getPlayerList().getPlayerByUsername(args[0]);
-                if (player2 != null) {
-                    if (UIs.BulkList.get(player2.getUniqueID()) != null) {
-                        UIs.BulkList.get(player2.getUniqueID()).clear();
+            if (player.canUseCommand(0, "sts.base")) {
+                if (args.length == 1) {
+                    EntityPlayerMP player2 = server.getPlayerList().getPlayerByUsername(args[0]);
+                    if (player2 != null) {
+                        if (UIs.BulkList.get(player2.getUniqueID()) != null) {
+                            UIs.BulkList.get(player2.getUniqueID()).clear();
+                        }
+                        UIs.menuUI(player2).openPage(player2);
+                    } else {
+                        player.sendMessage(new TextComponentString(Utils.regex("&cInvalid Argument")));
                     }
-                    UIs.menuUI(player2).openPage(player2);
                 } else {
-                    player.sendMessage(new TextComponentString(Utils.regex("&cInvalid Argument")));
+                    if (UIs.BulkList.get(player.getUniqueID()) != null) {
+                        UIs.BulkList.get(player.getUniqueID()).clear();
+                    }
+                    UIs.menuUI(player).forceOpenPage(player);
                 }
             } else {
-                if (UIs.BulkList.get(player.getUniqueID()) != null) {
-                    UIs.BulkList.get(player.getUniqueID()).clear();
-                }
-                UIs.menuUI(player).forceOpenPage(player);
+                player.sendMessage(new TextComponentString(Utils.regex("&cYou don't have permission!")));
             }
         }
     }
