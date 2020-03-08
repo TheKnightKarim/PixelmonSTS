@@ -472,6 +472,8 @@ public class UIs {
                             if (storagePosition != null) {
                                 if (pcUI(player).getPage(storagePosition.box + 1).isPresent()) {
                                     pcUI(player).getPage(storagePosition.box + 1).get().forceOpenPage(player);
+                                } else {
+                                    pcUI(player).forceOpenPage(player);
                                 }
                             } else {
                                 pcUI(player).forceOpenPage(player);
@@ -488,6 +490,8 @@ public class UIs {
                             if (storagePosition != null) {
                                 if (pcUI(player).getPage(storagePosition.box + 1).isPresent()) {
                                     pcUI(player).getPage(storagePosition.box + 1).get().forceOpenPage(player);
+                                } else {
+                                    pcUI(player).forceOpenPage(player);
                                 }
                             } else {
                                 pcUI(player).forceOpenPage(player);
@@ -505,6 +509,8 @@ public class UIs {
                         if (storagePosition != null) {
                             if (pcUI(player).getPage(storagePosition.box + 1).isPresent()) {
                                 pcUI(player).getPage(storagePosition.box + 1).get().forceOpenPage(player);
+                            } else {
+                                pcUI(player).forceOpenPage(player);
                             }
                         } else {
                             pcUI(player).forceOpenPage(player);
@@ -520,6 +526,8 @@ public class UIs {
                     if (storagePosition != null) {
                         if (pcUI(player).getPage(storagePosition.box + 1).isPresent()) {
                             pcUI(player).getPage(storagePosition.box + 1).get().forceOpenPage(player);
+                        } else {
+                            pcUI(player).forceOpenPage(player);
                         }
                     } else {
                         pcUI(player).forceOpenPage(player);
