@@ -17,7 +17,7 @@ apply plugin: 'net.minecraftforge.gradle.forge'
 apply plugin: 'com.github.johnrengelman.shadow'
 
 // Sets the version number shown in the file name.
-version = "1.1.3"
+version = "1.1.5"
 
 // Taken from the internet. vvv
 sourceCompatibility = targetCompatibility = "1.8"
@@ -59,7 +59,7 @@ dependencies
         {
             // Grab and include Sponge.
             compile 'org.spongepowered:spongeforge:1.12.2-2838-7.1.8:dev'
-            shadow fileTree(dir: 'libs', include: 'GooeyLibs-1.0.0.jar')
+            shadow fileTree(dir: 'libs', include: 'gooeylibs-1.0.3.jar')
 
             compile 'net.luckperms:api:5.0'
 
@@ -78,7 +78,7 @@ shadowJar {
     version = version + "-shadow"
     configurations = [project.configurations.shadow]
     minimize()
-    exclude "META-INF/fml_cache_class_versions.json"
+    exclude "META-INF/"
     //configurations = [project.configurations.compile]
 }
 

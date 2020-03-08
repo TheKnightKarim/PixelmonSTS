@@ -16,7 +16,7 @@ public class Translation {
         public static String growthlore = "&7Growth&f: &b";
         public static String IVslore = "&7IVs&f: ";
         public static String EVslore = "&7EVs&f: ";
-        public static String genderlore = "&7Gender&f: ";
+        public static String genderlore = "&7Gender&f: &b";
     }
 
     public static class PriceLore {
@@ -46,5 +46,6 @@ public class Translation {
     public static String exclamationPointcolor = "&b!";
     public static String shinyInName = "&7[&6Shiny&7]";
     public static String lastpokemoninparty = "&cYou have only one pokemon! You can't trade it away";
+    public static String monInList = "&bThis pokemon is in the list!";
 
 }

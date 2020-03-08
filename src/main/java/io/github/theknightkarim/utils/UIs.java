@@ -80,7 +80,9 @@ public class UIs {
                 .item(new ItemStack(PixelmonItems.LtradeHolderLeft))
                 .displayName(Utils.regex("&cBack to main menu"))
                 .onClick(action -> {
-                    UIs.BulkList.get(player.getUniqueID()).clear();
+                    if (UIs.BulkList.get(player.getUniqueID()) != null) {
+                        UIs.BulkList.get(player.getUniqueID()).clear();
+                    }
                     menuUI(player).forceOpenPage(player);
                 })
                 .build();
@@ -88,7 +90,9 @@ public class UIs {
         Button first = Button.builder()
                 .item(new ItemStack(PixelmonItems.LtradeHolderLeft))
                 .displayName(Utils.regex("&cFirst Page"))
-                .onClick(action -> pcUI(player).getPage(1).get().forceOpenPage(player))
+                .onClick(action -> {
+                    pcUI(player).getPage(1).get().forceOpenPage(player);
+                })
                 .build();
 
         Button previous = Button.builder()
@@ -106,7 +110,9 @@ public class UIs {
         Button last = Button.builder()
                 .item(new ItemStack(PixelmonItems.tradeHolderRight))
                 .displayName(Utils.regex("&cLast Page"))
-                .onClick(action -> pcUI(player).getPage(pcUI(player).getTotalPages()).get().forceOpenPage(player))
+                .onClick(action -> {
+                    pcUI(player).getPage(pcUI(player).getTotalPages()).get().forceOpenPage(player);
+                })
                 .build();
 
         Template template;
@@ -312,7 +318,7 @@ public class UIs {
                                 if (Utils.secondsleft(player) > 0) {
                                     Utils.enoughMoney(player);
                                 } else {
-                                    confirmationUI(player).forceOpenPage(player);
+                                    confirmationUIPC(player).forceOpenPage(player);
                                 }
                             })
                             .lore(lore)
@@ -368,7 +374,7 @@ public class UIs {
                             .displayName(Utils.regex("&7Cooldown"))
                             .onClick((action) -> {
                                 if (Utils.secondsleft(player) < 0) {
-                                    confirmationUI(player).forceOpenPage(player);
+                                    confirmationUIPC(player).forceOpenPage(player);
                                 }
                             })
                             .lore(lore)
@@ -451,6 +457,7 @@ public class UIs {
 
     public static Page bulkUI(EntityPlayerMP player) {
         Button addOrRemove;
+        StoragePosition storagePosition = Utils.playerPokemon.get(player.getUniqueID()).getPosition();
         if (BulkList.get(player.getUniqueID()) != null) {
             if (BulkList.get(player.getUniqueID()).contains(Utils.playerPokemon.get(player.getUniqueID())) || BulkList.get(player.getUniqueID()).size() == Config.MaxPokemoninBulk) {
                 List<String> lore = new ArrayList<>();
@@ -462,7 +469,13 @@ public class UIs {
                         .displayName(Utils.regex("&cRemove pokemon from Bulk List"))
                         .onClick(action -> {
                             BulkList.get(player.getUniqueID()).remove(Utils.playerPokemon.get(player.getUniqueID()));
-                            pcUI(player).forceOpenPage(player);
+                            if (storagePosition != null) {
+                                if (pcUI(player).getPage(storagePosition.box + 1).isPresent()) {
+                                    pcUI(player).getPage(storagePosition.box + 1).get().forceOpenPage(player);
+                                }
+                            } else {
+                                pcUI(player).forceOpenPage(player);
+                            }
                         })
                         .lore(lore)
                         .build();
@@ -472,7 +485,6 @@ public class UIs {
                         .displayName(Utils.regex("&aAdd pokemon to Bulk List"))
                         .onClick(action -> {
                             BulkList.get(player.getUniqueID()).add(Utils.playerPokemon.get(player.getUniqueID()));
-                            StoragePosition storagePosition = Utils.playerPokemon.get(player.getUniqueID()).getPosition();
                             if (storagePosition != null) {
                                 if (pcUI(player).getPage(storagePosition.box + 1).isPresent()) {
                                     pcUI(player).getPage(storagePosition.box + 1).get().forceOpenPage(player);
@@ -490,7 +502,13 @@ public class UIs {
                     .onClick(action -> {
                         BulkList.put(player.getUniqueID(), new ArrayList<>());
                         BulkList.get(player.getUniqueID()).add(Utils.playerPokemon.get(player.getUniqueID()));
-                        pcUI(player).forceOpenPage(player);
+                        if (storagePosition != null) {
+                            if (pcUI(player).getPage(storagePosition.box + 1).isPresent()) {
+                                pcUI(player).getPage(storagePosition.box + 1).get().forceOpenPage(player);
+                            }
+                        } else {
+                            pcUI(player).forceOpenPage(player);
+                        }
                     })
                     .build();
         }
@@ -498,7 +516,15 @@ public class UIs {
         Button decline = Button.builder()
                 .item(new ItemStack(Items.DYE, 1, 1))
                 .displayName(Utils.regex("&cDecline"))
-                .type(ButtonType.PreviousPage)
+                .onClick(action -> {
+                    if (storagePosition != null) {
+                        if (pcUI(player).getPage(storagePosition.box + 1).isPresent()) {
+                            pcUI(player).getPage(storagePosition.box + 1).get().forceOpenPage(player);
+                        }
+                    } else {
+                        pcUI(player).forceOpenPage(player);
+                    }
+                })
                 .build();
 
         Template template = Template.builder(3)
@@ -511,7 +537,6 @@ public class UIs {
         Page page = Page.builder()
                 .title(Utils.regex("&b&lConfirmation"))
                 .template(template)
-                .previousPage(pcUI(player))
                 .build();
 
         return page;
@@ -701,7 +726,7 @@ public class UIs {
         Page page = Page.builder()
                 .title(Utils.regex("&b&lConfirmation"))
                 .template(template)
-                .previousPage(menuUI(player))
+                .previousPage(pcUI(player))
                 .dynamicContents(Utils.getBulkList(player))
                 .dynamicContentArea(1,1,4,7)
                 .build();
@@ -758,7 +783,7 @@ public class UIs {
         ItemStack itemStack = new ItemStack(PixelmonItems.unoOrb, 1, meta);
         NBTTagCompound nbtTagCompound = new NBTTagCompound();
         nbtTagCompound.setInteger("Unbreakable", 1);
-        nbtTagCompound.setInteger("HideFlags", 2);
+        nbtTagCompound.setInteger("HideFlags", 4);
         itemStack.setTagCompound(nbtTagCompound);
 
         return Button.builder()

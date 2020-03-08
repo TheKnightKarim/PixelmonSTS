@@ -20,11 +20,8 @@ import io.github.theknightkarim.configs.Prices;
 import io.github.theknightkarim.configs.Translation;
 import net.luckperms.api.cacheddata.CachedMetaData;
 import net.luckperms.api.model.user.User;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
-import net.minecraft.init.Enchantments;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.text.TextComponentString;
@@ -55,7 +52,7 @@ public class Utils {
     private static EnumMap<EnumSpecies, SellData> prices = new EnumMap<>(EnumSpecies.class);
     private static Gson gson = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();
 
-    private static List<String> getDesc(Pokemon pokemon) {
+    private static List<String> getDesc(Pokemon pokemon, EntityPlayerMP player) {
         List<String> lore = new ArrayList<>();
         DecimalFormat df = new DecimalFormat("###.##");
         String evPercentage = df.format(((pokemon.getStats().evs.hp + pokemon.getStats().evs.attack + pokemon.getStats().evs.defence + pokemon.getStats().evs.specialAttack + pokemon.getStats().evs.specialDefence + pokemon.getStats().evs.speed)*100)/510) + "%";
@@ -72,13 +69,16 @@ public class Utils {
             lore.add(TextFormatting.AQUA + "" + pokemon.getStats().ivs.hp + TextFormatting.GRAY + "/" + TextFormatting.AQUA + pokemon.getStats().ivs.attack + TextFormatting.GRAY + "/" + TextFormatting.AQUA + pokemon.getStats().ivs.defence + TextFormatting.GRAY + "/" + TextFormatting.AQUA + pokemon.getStats().ivs.specialAttack + TextFormatting.GRAY + "/" + TextFormatting.AQUA + pokemon.getStats().ivs.specialDefence + TextFormatting.GRAY + "/" + TextFormatting.AQUA + pokemon.getStats().ivs.speed + TextFormatting.GRAY + " [" + TextFormatting.AQUA + pokemon.getStats().ivs.getPercentage(0) + "%" + TextFormatting.GRAY + "]");
             lore.add(regex(Translation.StatLore.EVslore));
             lore.add(TextFormatting.AQUA + "" + pokemon.getStats().evs.hp + TextFormatting.GRAY + "/" + TextFormatting.AQUA + pokemon.getStats().evs.attack + TextFormatting.GRAY + "/" + TextFormatting.AQUA + pokemon.getStats().evs.defence + TextFormatting.GRAY + "/" + TextFormatting.AQUA + pokemon.getStats().evs.specialAttack + TextFormatting.GRAY + "/" + TextFormatting.AQUA + pokemon.getStats().evs.specialDefence + TextFormatting.GRAY + "/" + TextFormatting.AQUA + pokemon.getStats().evs.speed + TextFormatting.GRAY + " [" + TextFormatting.AQUA + evPercentage + TextFormatting.GRAY + "]");
+            if (UIs.BulkList.get(player.getUniqueID()) != null && UIs.BulkList.get(player.getUniqueID()).contains(pokemon)) {
+                lore.add(Utils.regex(Translation.monInList));
+            }
             return lore;
         }
     }
 
     private static void noGender(Pokemon pokemon, List<String> lore) {
         if(pokemon.getGender() != Gender.None) {
-            lore.add(Translation.StatLore.genderlore + pokemon.getGender());
+            lore.add(Utils.regex(Translation.StatLore.genderlore + pokemon.getGender()));
         }
     }
 
@@ -147,7 +147,7 @@ public class Utils {
         fileWriter.flush();
     }
 
-    private static List<String> getPriceAsLore(Pokemon pokemon) {
+    private static List<String> getPriceAsLore(Pokemon pokemon, EntityPlayerMP player) {
         SellData sd = prices.get(pokemon.getSpecies());
         if (sd == null) {
             sd = new SellData();
@@ -155,7 +155,9 @@ public class Utils {
         List<String> lore = new ArrayList<>();
         if (pokemon.isEgg()) {
             if (sd.egg > 0) {
-                lore.add(regex(Translation.PriceLore.egg + sd.egg));
+                if (Config.EggBool) {
+                    lore.add(regex(Translation.PriceLore.egg + sd.egg));
+                }
             }
             return lore;
         }
@@ -202,6 +204,9 @@ public class Utils {
             lore.add(regex(Translation.PriceLore.HA + sd.HA));
         }
         lore.add(regex(Translation.PriceLore.totalprice + getPrice(pokemon)));
+        if (UIs.BulkList.get(player.getUniqueID()) != null && UIs.BulkList.get(player.getUniqueID()).contains(pokemon)) {
+            lore.add(Utils.regex(Translation.monInList));
+        }
         return lore;
     }
 
@@ -265,9 +270,9 @@ public class Utils {
                 itemStackPhoto.setStackDisplayName(pokeStack.getDisplayName());
                 List<String> lore;
                 if (UIs.DescOrPrice.get(player.getUniqueID()) != null) {
-                    lore = getDesc(pokeStack);
+                    lore = getDesc(pokeStack, player);
                 } else {
-                    lore = getPriceAsLore(pokeStack);
+                    lore = getPriceAsLore(pokeStack, player);
                 }
                 Button nullPokes = Button.builder()
                         .item(itemStackPhoto)
@@ -291,9 +296,9 @@ public class Utils {
                 }
                 List<String> lore;
                 if (UIs.DescOrPrice.get(player.getUniqueID()) != null) {
-                    lore = getDesc(pokeStack);
+                    lore = getDesc(pokeStack, player);
                 } else {
-                    lore = getPriceAsLore(pokeStack);
+                    lore = getPriceAsLore(pokeStack, player);
                 }
                 Button pokes = Button.builder()
                         .item(itemStackPhoto)
@@ -330,9 +335,9 @@ public class Utils {
                 itemStackPhoto.setStackDisplayName(pokeStack.getDisplayName());
                 List<String> lore;
                 if (UIs.DescOrPrice.get(player.getUniqueID()) != null) {
-                    lore = getDesc(pokeStack);
+                    lore = getDesc(pokeStack, player);
                 } else {
-                    lore = getPriceAsLore(pokeStack);
+                    lore = getPriceAsLore(pokeStack, player);
                 }
                 if (!Config.EggBool) {
                     Button nullPokes = Button.builder()
@@ -353,18 +358,19 @@ public class Utils {
                                 .lore(lore)
                                 .build();
                         partyList.add(nullPokes);
+                    } else {
+                        Button nullPokes = Button.builder()
+                                .item(itemStackPhoto)
+                                .displayName(regex(Translation.eggButton))
+                                .onClick((action) -> {
+                                    playerButton.put(player.getUniqueID(), action.getButton());
+                                    playerPokemon.put(player.getUniqueID(), pokeStack);
+                                    UIs.confirmationUI(player).forceOpenPage(player);
+                                })
+                                .lore(lore)
+                                .build();
+                        partyList.add(nullPokes);
                     }
-                    Button nullPokes = Button.builder()
-                            .item(itemStackPhoto)
-                            .displayName(regex(Translation.eggButton))
-                            .onClick((action) -> {
-                                playerButton.put(player.getUniqueID(), action.getButton());
-                                playerPokemon.put(player.getUniqueID(), pokeStack);
-                                UIs.confirmationUI(player).forceOpenPage(player);
-                            })
-                            .lore(lore)
-                            .build();
-                    partyList.add(nullPokes);
                 }
             } else {
                 itemStackPhoto = getPokemonPhoto(pokeStack);
@@ -377,17 +383,17 @@ public class Utils {
                 }
                 List<String> lore;
                 if (UIs.DescOrPrice.get(player.getUniqueID()) != null) {
-                    lore = getDesc(pokeStack);
+                    lore = getDesc(pokeStack, player);
                 } else {
-                    lore = getPriceAsLore(pokeStack);
+                    lore = getPriceAsLore(pokeStack, player);
                 }
                 if (!Config.EggBool) {
-                    if (party.getTeam().size() >= 1) {
+                    if (party.getTeam().size() <= 1) {
                         Button pokes = Button.builder()
                                 .item(itemStackPhoto)
                                 .onClick((action) -> {
                                     InventoryAPI.getInstance().closePlayerInventory(player);
-                                    player.sendMessage(new TextComponentString(Translation.lastpokemoninparty));
+                                    player.sendMessage(new TextComponentString(Utils.regex(Translation.lastpokemoninparty)));
                                 })
                                 .lore(lore)
                                 .build();
@@ -410,7 +416,7 @@ public class Utils {
                                 .item(itemStackPhoto)
                                 .onClick((action) -> {
                                     InventoryAPI.getInstance().closePlayerInventory(player);
-                                    player.sendMessage(new TextComponentString(Translation.lastpokemoninparty));
+                                    player.sendMessage(new TextComponentString(Utils.regex(Translation.lastpokemoninparty)));
                                 })
                                 .lore(lore)
                                 .build();
@@ -449,19 +455,13 @@ public class Utils {
                 itemStackPhoto = new ItemStack(PixelmonItems.itemPixelmonSprite);
                 NBTTagCompound nbt = new NBTTagCompound();
                 nbt.setString("SpriteName", egg(pokeStack));
-                if (UIs.BulkList.get(player.getUniqueID()).contains(pokeStack)) {
-                    HashMap<Enchantment, Integer> enchantmentIntegerHashMap = new HashMap<>();
-                    enchantmentIntegerHashMap.put(Enchantments.SHARPNESS, 1);
-                    EnchantmentHelper.setEnchantments(enchantmentIntegerHashMap, itemStackPhoto);
-                    nbt.setInteger("HideFlags", 1);
-                }
                 itemStackPhoto.setTagCompound(nbt);
                 itemStackPhoto.setStackDisplayName(pokeStack.getDisplayName());
                 List<String> lore;
                 if (UIs.DescOrPrice.get(player.getUniqueID()) != null) {
-                    lore = getDesc(pokeStack);
+                    lore = getDesc(pokeStack, player);
                 } else {
-                    lore = getPriceAsLore(pokeStack);
+                    lore = getPriceAsLore(pokeStack, player);
                 }
                 if (!Config.EggBool) {
                     Button nullPokes = Button.builder()
@@ -489,14 +489,6 @@ public class Utils {
                 }
             } else {
                 itemStackPhoto = getPokemonPhoto(pokeStack);
-                if (UIs.BulkList.get(player.getUniqueID()).contains(pokeStack)) {
-                    HashMap<Enchantment, Integer> enchantmentIntegerHashMap = new HashMap<>();
-                    enchantmentIntegerHashMap.put(Enchantments.SHARPNESS, 1);
-                    EnchantmentHelper.setEnchantments(enchantmentIntegerHashMap, itemStackPhoto);
-                    NBTTagCompound nbt = new NBTTagCompound();
-                    nbt.setInteger("HideFlags", 1);
-                    itemStackPhoto.setTagCompound(nbt);
-                }
                 if (pokeStack.isShiny()) {
                     itemStackPhoto.setStackDisplayName(TextFormatting.AQUA + "" + TextFormatting.BOLD + pokeStack.getDisplayName() + regex(Translation.shinyInName));
                 } else if (!pokeStack.getCustomTexture().isEmpty()) {
@@ -506,9 +498,9 @@ public class Utils {
                 }
                 List<String> lore;
                 if (UIs.DescOrPrice.get(player.getUniqueID()) != null) {
-                    lore = getDesc(pokeStack);
+                    lore = getDesc(pokeStack, player);
                 } else {
-                    lore = getPriceAsLore(pokeStack);
+                    lore = getPriceAsLore(pokeStack, player);
                 }
                 Button pokes = Button.builder()
                         .item(itemStackPhoto)
@@ -532,11 +524,11 @@ public class Utils {
     private static ItemStack getPokemonPhoto(Pokemon pokemon){
         ItemStack itemStack = new ItemStack(PixelmonItems.itemPixelmonSprite);
         NBTTagCompound tagCompound = new NBTTagCompound();
-        itemStack.setTagCompound(tagCompound);
         tagCompound.setShort("ndex", (short) pokemon.getSpecies().getNationalPokedexInteger());
         tagCompound.setByte("form", (byte) pokemon.getForm());
         tagCompound.setByte("gender", pokemon.getGender().getForm());
         tagCompound.setBoolean("Shiny", pokemon.isShiny());
+        itemStack.setTagCompound(tagCompound);
         return itemStack;
     }
 
@@ -565,7 +557,6 @@ public class Utils {
         CachedMetaData metaData = null;
         if (user != null) {
             metaData = user.getCachedData().getMetaData(PixelmonSTS.api.getContextManager().getQueryOptions(user).orElse(PixelmonSTS.api.getContextManager().getStaticQueryOptions()));
-
         }
         List<String> defaultValues = new ArrayList<>();
         defaultValues.add(String.valueOf(Config.CooldownTime));
