@@ -1,4 +1,4 @@
-package io.github.theknightkarim.utils;
+package io.github.theknightkarim.pixelmonsts.utils;
 
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;

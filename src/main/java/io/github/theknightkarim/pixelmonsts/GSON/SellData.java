@@ -1,6 +1,6 @@
-package io.github.theknightkarim.GSON;
+package io.github.theknightkarim.pixelmonsts.GSON;
 
-import io.github.theknightkarim.configs.Prices;
+import io.github.theknightkarim.pixelmonsts.configs.Prices;
 
 public class SellData {
 

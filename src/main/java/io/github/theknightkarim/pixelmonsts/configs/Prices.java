@@ -1,6 +1,6 @@
-package io.github.theknightkarim.configs;
+package io.github.theknightkarim.pixelmonsts.configs;
 
-import io.github.theknightkarim.PixelmonSTS;
+import io.github.theknightkarim.pixelmonsts.PixelmonSTS;
 import net.minecraftforge.common.config.Config;
 
 @Config(modid = PixelmonSTS.MOD_ID, name = PixelmonSTS.MOD_NAME + "/prices")

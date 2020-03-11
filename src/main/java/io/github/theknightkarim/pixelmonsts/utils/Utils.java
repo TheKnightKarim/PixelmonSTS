@@ -1,4 +1,4 @@
-package io.github.theknightkarim.utils;
+package io.github.theknightkarim.pixelmonsts.utils;
 
 import ca.landonjw.gooeylibs.inventory.api.Button;
 import ca.landonjw.gooeylibs.inventory.api.InventoryAPI;
@@ -13,11 +13,11 @@ import com.pixelmonmod.pixelmon.entities.pixelmon.stats.Gender;
 import com.pixelmonmod.pixelmon.entities.pixelmon.stats.IVStore;
 import com.pixelmonmod.pixelmon.enums.EnumSpecies;
 import com.pixelmonmod.pixelmon.storage.PlayerPartyStorage;
-import io.github.theknightkarim.GSON.SellData;
-import io.github.theknightkarim.PixelmonSTS;
-import io.github.theknightkarim.configs.Config;
-import io.github.theknightkarim.configs.Prices;
-import io.github.theknightkarim.configs.Translation;
+import io.github.theknightkarim.pixelmonsts.GSON.SellData;
+import io.github.theknightkarim.pixelmonsts.PixelmonSTS;
+import io.github.theknightkarim.pixelmonsts.configs.Config;
+import io.github.theknightkarim.pixelmonsts.configs.Prices;
+import io.github.theknightkarim.pixelmonsts.configs.Translation;
 import net.luckperms.api.cacheddata.CachedMetaData;
 import net.luckperms.api.model.user.User;
 import net.minecraft.entity.player.EntityPlayerMP;

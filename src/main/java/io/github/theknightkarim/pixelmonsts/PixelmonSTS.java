@@ -1,9 +1,9 @@
-package io.github.theknightkarim;
+package io.github.theknightkarim.pixelmonsts;
 
 import ca.landonjw.gooeylibs.inventory.api.InventoryAPI;
-import io.github.theknightkarim.configs.Config;
-import io.github.theknightkarim.utils.Command;
-import io.github.theknightkarim.utils.Utils;
+import io.github.theknightkarim.pixelmonsts.configs.Config;
+import io.github.theknightkarim.pixelmonsts.utils.Command;
+import io.github.theknightkarim.pixelmonsts.utils.Utils;
 import net.luckperms.api.LuckPerms;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
@@ -28,7 +28,7 @@ public class PixelmonSTS {
 
     public static final String MOD_ID = "pixelmonsts";
     public static final String MOD_NAME = "PixelmonSTS";
-    public static final String VERSION = "1.1.4";
+    public static final String VERSION = "1.1.5";
     public static File stsLog;
     public static File customprices;
     public static EconomyService economyService;

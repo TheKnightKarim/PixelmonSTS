@@ -1,4 +1,4 @@
-package io.github.theknightkarim.utils;
+package io.github.theknightkarim.pixelmonsts.utils;
 
 import ca.landonjw.gooeylibs.inventory.api.*;
 import com.pixelmonmod.pixelmon.api.pokemon.Pokemon;
@@ -6,8 +6,8 @@ import com.pixelmonmod.pixelmon.api.storage.StoragePosition;
 import com.pixelmonmod.pixelmon.config.PixelmonBlocks;
 import com.pixelmonmod.pixelmon.config.PixelmonItems;
 import com.pixelmonmod.pixelmon.config.PixelmonItemsHeld;
-import io.github.theknightkarim.PixelmonSTS;
-import io.github.theknightkarim.configs.Config;
+import io.github.theknightkarim.pixelmonsts.PixelmonSTS;
+import io.github.theknightkarim.pixelmonsts.configs.Config;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
