@@ -63,9 +63,9 @@ public class PixelmonSTS {
         File directory = new File(event.getModConfigurationDirectory().getPath(), MOD_NAME);
         if (!directory.exists()) {
             if (directory.mkdir()) {
-                System.out.println("PixelWT Directory created!");
+                System.out.println("PixelSTS Directory created!");
             } else {
-                System.out.println("PixelWT Directory error");
+                System.out.println("PixelSTS Directory error");
             }
         }
 
