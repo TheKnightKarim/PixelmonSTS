@@ -562,7 +562,13 @@ public class Utils {
         defaultValues.add(String.valueOf(Config.CooldownTime));
         List<String> metaResult = null;
         if (metaData != null) {
-            metaResult = metaData.getMeta().getOrDefault("sts.cooldown", defaultValues);
+            if (Utils.playerPokemon.get(player.getUniqueID()).isLegendary()) {
+                metaResult = metaData.getMeta().getOrDefault("sts.cooldown.legendary", defaultValues);
+            } else if (EnumSpecies.ultrabeasts.contains(Utils.playerPokemon.get(player.getUniqueID()).getBaseStats().pixelmonName)) {
+                metaResult = metaData.getMeta().getOrDefault("sts.cooldown.ultrabeast", defaultValues);
+            } else {
+                metaResult = metaData.getMeta().getOrDefault("sts.cooldown", defaultValues);
+            }
         }
         if (metaResult.contains(String.valueOf(Config.CooldownTime))) {
             return ((UIs.cooldownMap.get(player.getUniqueID()) / 1000) + Config.CooldownTime) - (System.currentTimeMillis() / 1000);
@@ -661,7 +667,7 @@ public class Utils {
     }
 
     static String regex(String line) {
-        String regex = "&(?=[123456789abcdefklmnor])";
+        String regex = "&(?=[0123456789abcdefklmnor])";
         Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(line);
         if (matcher.find()) {

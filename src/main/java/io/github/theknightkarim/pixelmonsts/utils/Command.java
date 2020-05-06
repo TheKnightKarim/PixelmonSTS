@@ -3,8 +3,12 @@ package io.github.theknightkarim.pixelmonsts.utils;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.launchwrapper.IClassTransformer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.event.ClickEvent;
+import ninja.leaping.configurate.commented.CommentedConfigurationNode;
+import org.spongepowered.api.service.pagination.PaginationList;
 
 public class Command extends CommandBase {
 

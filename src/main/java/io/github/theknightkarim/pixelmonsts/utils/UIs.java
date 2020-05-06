@@ -217,7 +217,7 @@ public class UIs {
             if (cooldownMap.containsKey(player.getUniqueID())) {
                 if (Utils.secondsleft(player) > 0) {
                     List<String> lore = new ArrayList<>();
-                    lore.add("Duration&f: &b" + Utils.secondsleft(player) + " seconds");
+                    lore.add(Utils.regex("Duration&f: &b" + Utils.secondsleft(player) + " seconds"));
                     confirmOrCooldownButton = Button.builder()
                             .item(new ItemStack(PixelmonItems.hourglassGold))
                             .displayName(Utils.regex("&7Cooldown"))
@@ -368,7 +368,7 @@ public class UIs {
             if (cooldownMap.containsKey(player.getUniqueID())) {
                 if (Utils.secondsleft(player) > 0) {
                     List<String> lore = new ArrayList<>();
-                    lore.add("Duration&f: &b" + Utils.secondsleft(player) + " seconds");
+                    lore.add(Utils.regex("Duration&f: &b" + Utils.secondsleft(player) + " seconds"));
                     confirmOrCooldownButton = Button.builder()
                             .item(new ItemStack(PixelmonItems.hourglassGold))
                             .displayName(Utils.regex("&7Cooldown"))
@@ -625,7 +625,7 @@ public class UIs {
             if (cooldownMap.containsKey(player.getUniqueID())) {
                 if (Utils.secondsleft(player) > 0) {
                     List<String> lore = new ArrayList<>();
-                    lore.add("Duration&f: &b" + Utils.secondsleft(player) + " seconds");
+                    lore.add(Utils.regex("Duration&f: &b" + Utils.secondsleft(player) + " seconds"));
                     confirmOrCooldownButton = Button.builder()
                             .item(new ItemStack(PixelmonItems.hourglassGold))
                             .displayName(Utils.regex("&7Cooldown"))
