@@ -1,6 +1,10 @@
 package io.github.theknightkarim.pixelmonsts.configs;
 
 import io.github.theknightkarim.pixelmonsts.PixelmonSTS;
+import net.minecraftforge.common.config.ConfigManager;
+import net.minecraftforge.common.config.Configuration;
+
+import java.lang.reflect.Method;
 
 @net.minecraftforge.common.config.Config(modid = PixelmonSTS.MOD_ID, name = PixelmonSTS.MOD_NAME + "/config")
 public class Config {
@@ -48,5 +52,27 @@ public class Config {
     })
     @net.minecraftforge.common.config.Config.RangeInt(min = 2, max = 840)
     public static int MaxPokemoninBulk = 28;
+
+    public static void reloadConfig() {
+        try {
+            Method getCfg = ConfigManager.class.getDeclaredMethod("getConfiguration", String.class, String.class);
+            getCfg.setAccessible(true);
+            Configuration cfg = (Configuration) getCfg.invoke(null, PixelmonSTS.MOD_ID, PixelmonSTS.MOD_NAME + "/config");
+            if(cfg == null) {
+                return;
+            }
+            cfg.load();
+            Cooldown = cfg.get("general", "Cooldown", true).getBoolean();
+            CooldownTime = cfg.get("general", "CooldownTime", 60).getInt();
+            CooldownPayment = cfg.get("general", "CooldownPayment", true).getBoolean();
+            CooldownPaymentPrice = cfg.get("general", "CooldownPaymentPrice", 50000).getInt();
+            currency = cfg.get("general", "currency", "Coin").getString();
+            EggBool = cfg.get("general", "EggBool", false).getBoolean();
+            Bulk = cfg.get("general", "Bulk", true).getBoolean();
+            MaxPokemoninBulk = cfg.get("general", "MaxPokemoninBulk", 28).getInt();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
 
 }

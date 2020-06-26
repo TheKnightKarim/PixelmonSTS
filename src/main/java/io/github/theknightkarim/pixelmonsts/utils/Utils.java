@@ -8,13 +8,16 @@ import com.pixelmonmod.pixelmon.api.pokemon.Pokemon;
 import com.pixelmonmod.pixelmon.api.storage.PCStorage;
 import com.pixelmonmod.pixelmon.config.PixelmonConfig;
 import com.pixelmonmod.pixelmon.config.PixelmonItems;
+import com.pixelmonmod.pixelmon.config.PixelmonItemsHeld;
 import com.pixelmonmod.pixelmon.entities.pixelmon.stats.EVStore;
 import com.pixelmonmod.pixelmon.entities.pixelmon.stats.Gender;
 import com.pixelmonmod.pixelmon.entities.pixelmon.stats.IVStore;
 import com.pixelmonmod.pixelmon.enums.EnumSpecies;
+import com.pixelmonmod.pixelmon.items.ItemPixelmonSprite;
 import com.pixelmonmod.pixelmon.storage.PlayerPartyStorage;
 import io.github.theknightkarim.pixelmonsts.GSON.SellData;
 import io.github.theknightkarim.pixelmonsts.PixelmonSTS;
+import io.github.theknightkarim.pixelmonsts.configs.Boosters;
 import io.github.theknightkarim.pixelmonsts.configs.Config;
 import io.github.theknightkarim.pixelmonsts.configs.Prices;
 import io.github.theknightkarim.pixelmonsts.configs.Translation;
@@ -22,11 +25,13 @@ import net.luckperms.api.cacheddata.CachedMetaData;
 import net.luckperms.api.model.user.User;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
 import org.spongepowered.api.Sponge;
+import org.spongepowered.api.item.ItemType;
 import org.spongepowered.api.service.economy.account.UniqueAccount;
 import org.spongepowered.api.service.economy.transaction.ResultType;
 import org.spongepowered.api.service.economy.transaction.TransactionResult;
@@ -145,6 +150,13 @@ public class Utils {
         number2.addProperty("HA", (int)(Prices.HA * 1.5));
         fileWriter.write(gson.toJson(jsonObject));
         fileWriter.flush();
+    }
+
+    public static void reloadAllConfigs() {
+        Boosters.reloadConfig();
+        Config.reloadConfig();
+        Prices.reloadConfig();
+        getGSONContent(PixelmonSTS.customprices);
     }
 
     private static List<String> getPriceAsLore(Pokemon pokemon, EntityPlayerMP player) {
@@ -522,14 +534,7 @@ public class Utils {
     }
 
     private static ItemStack getPokemonPhoto(Pokemon pokemon){
-        ItemStack itemStack = new ItemStack(PixelmonItems.itemPixelmonSprite);
-        NBTTagCompound tagCompound = new NBTTagCompound();
-        tagCompound.setShort("ndex", (short) pokemon.getSpecies().getNationalPokedexInteger());
-        tagCompound.setByte("form", (byte) pokemon.getForm());
-        tagCompound.setByte("gender", pokemon.getGender().getForm());
-        tagCompound.setBoolean("Shiny", pokemon.isShiny());
-        itemStack.setTagCompound(tagCompound);
-        return itemStack;
+        return ItemPixelmonSprite.getPhoto(pokemon);
     }
 
     static void logger(EntityPlayerMP player, Pokemon pokemon) throws IOException {

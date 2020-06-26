@@ -17,7 +17,7 @@ apply plugin: 'net.minecraftforge.gradle.forge'
 apply plugin: 'com.github.johnrengelman.shadow'
 
 // Sets the version number shown in the file name.
-version = "1.1.6"
+version = "1.1.7"
 
 // Taken from the internet. vvv
 sourceCompatibility = targetCompatibility = "1.8"

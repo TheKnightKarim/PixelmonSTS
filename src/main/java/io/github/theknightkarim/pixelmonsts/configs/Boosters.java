@@ -2,6 +2,10 @@ package io.github.theknightkarim.pixelmonsts.configs;
 
 import io.github.theknightkarim.pixelmonsts.PixelmonSTS;
 import net.minecraftforge.common.config.Config;
+import net.minecraftforge.common.config.ConfigManager;
+import net.minecraftforge.common.config.Configuration;
+
+import java.lang.reflect.Method;
 
 @Config(modid = PixelmonSTS.MOD_ID, name = PixelmonSTS.MOD_NAME + "/boosters")
 public class Boosters {
@@ -45,4 +49,26 @@ public class Boosters {
             "Hidden Ability Booster"
     })
     public static boolean HA = true;
+
+    public static void reloadConfig() {
+        try {
+            Method getCfg = ConfigManager.class.getDeclaredMethod("getConfiguration", String.class, String.class);
+            getCfg.setAccessible(true);
+            Configuration cfg = (Configuration) getCfg.invoke(null, PixelmonSTS.MOD_ID, PixelmonSTS.MOD_NAME + "/config");
+            if(cfg == null) {
+                return;
+            }
+            cfg.load();
+            Shiny = cfg.get("general", "Shiny", true).getBoolean();
+            CustomTexture = cfg.get("general", "CustomTexture", true).getBoolean();
+            Legendary = cfg.get("general", "Legendary", true).getBoolean();
+            UltraBeast = cfg.get("general", "UltraBeast", true).getBoolean();
+            MaxIV = cfg.get("general", "MaxIV", true).getBoolean();
+            MaxEV = cfg.get("general", "MaxEV", true).getBoolean();
+            Level = cfg.get("general", "Level", true).getBoolean();
+            HA = cfg.get("general", "HA", true).getBoolean();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
 }

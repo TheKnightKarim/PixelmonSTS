@@ -1,7 +1,6 @@
 package io.github.theknightkarim.pixelmonsts;
 
 import ca.landonjw.gooeylibs.inventory.api.InventoryAPI;
-import com.pixelmonmod.pixelmon.enums.EnumSpecies;
 import io.github.theknightkarim.pixelmonsts.configs.Config;
 import io.github.theknightkarim.pixelmonsts.utils.Command;
 import io.github.theknightkarim.pixelmonsts.utils.Utils;
@@ -29,7 +28,7 @@ public class PixelmonSTS {
 
     public static final String MOD_ID = "pixelmonsts";
     public static final String MOD_NAME = "PixelmonSTS";
-    public static final String VERSION = "1.1.6";
+    public static final String VERSION = "1.1.7";
     public static File stsLog;
     public static File customprices;
     public static EconomyService economyService;
