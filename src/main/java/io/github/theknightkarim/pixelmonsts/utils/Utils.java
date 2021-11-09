@@ -115,9 +115,8 @@ public class Utils {
         JsonObject number2 = new JsonObject();
 
         JsonArray json1 = new JsonArray();
-        for(String s : EnumSpecies.legendaries) {
-            json1.add(s);
-        }
+        for (EnumSpecies legend : EnumSpecies.legendaries)
+            json1.add(legend.name);
         jsonObject.add("1", number1);
         number1.add("names", json1);
         number1.addProperty("base", Prices.Base * 2);
@@ -133,9 +132,9 @@ public class Utils {
 
 
         JsonArray json2 = new JsonArray();
-        for(String s : EnumSpecies.ultrabeasts) {
-            json2.add(s);
-        }
+        for (EnumSpecies ub : EnumSpecies.ultrabeasts)
+            json2.add(ub.name);
+
         jsonObject.add("2", number2);
         number2.add("names", json2);
         number2.addProperty("base", (int) (Prices.Base * 1.5));
