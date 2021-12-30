@@ -115,9 +115,8 @@ public class Utils {
         JsonObject number2 = new JsonObject();
 
         JsonArray json1 = new JsonArray();
-        for(String s : EnumSpecies.legendaries) {
-            json1.add(s);
-        }
+        for (EnumSpecies legend : EnumSpecies.legendaries)
+            json1.add(legend.name);
         jsonObject.add("1", number1);
         number1.add("names", json1);
         number1.addProperty("base", Prices.Base * 2);
@@ -133,9 +132,9 @@ public class Utils {
 
 
         JsonArray json2 = new JsonArray();
-        for(String s : EnumSpecies.ultrabeasts) {
-            json2.add(s);
-        }
+        for (EnumSpecies ub : EnumSpecies.ultrabeasts)
+            json2.add(ub.name);
+
         jsonObject.add("2", number2);
         number2.add("names", json2);
         number2.addProperty("base", (int) (Prices.Base * 1.5));
@@ -181,10 +180,10 @@ public class Utils {
         if (sd.customtexture > 0 && !pokemon.getCustomTexture().isEmpty())
             lore.add(regex(Translation.PriceLore.customtexture + sd.customtexture));
 
-        if (sd.legendary > 0 && pokemon.isLegendary())
+        if (sd.legendary > 0 && pokemon.isLegendary() && !pokemon.isPokemon(EnumSpecies.Phione))
             lore.add(regex(Translation.PriceLore.legendary + sd.legendary));
 
-        if (sd.ub > 0 && EnumSpecies.ultrabeasts.contains(pokemon.getSpecies().getPokemonName()))
+        if (sd.ub > 0 && EnumSpecies.ultrabeasts.contains(pokemon.getSpecies()))
             lore.add(regex(Translation.PriceLore.ultrabeast + sd.ub));
 
         if (sd.maxIV > 0) {
@@ -237,9 +236,9 @@ public class Utils {
             price += sd.shiny;
         if (!pokemon.getCustomTexture().isEmpty())
             price += sd.customtexture;
-        if (pokemon.isLegendary())
+        if (pokemon.isLegendary() && !pokemon.isPokemon(EnumSpecies.Phione))
             price += sd.legendary;
-        if (EnumSpecies.ultrabeasts.contains(pokemon.getSpecies().getPokemonName()))
+        if (EnumSpecies.ultrabeasts.contains(pokemon.getSpecies()))
             price += sd.ub;
         if (sd.maxIV > 0) {
             int max = 0;
@@ -567,9 +566,9 @@ public class Utils {
         defaultValues.add(String.valueOf(Config.CooldownTime));
         List<String> metaResult = null;
         if (metaData != null) {
-            if (Utils.playerPokemon.get(player.getUniqueID()).isLegendary()) {
+            if (Utils.playerPokemon.get(player.getUniqueID()).isLegendary() && !Utils.playerPokemon.get(player.getUniqueID()).isPokemon(EnumSpecies.Phione)) {
                 metaResult = metaData.getMeta().getOrDefault("sts.cooldown.legendary", defaultValues);
-            } else if (EnumSpecies.ultrabeasts.contains(Utils.playerPokemon.get(player.getUniqueID()).getBaseStats().pixelmonName)) {
+            } else if (EnumSpecies.ultrabeasts.contains(Utils.playerPokemon.get(player.getUniqueID()).getSpecies())) {
                 metaResult = metaData.getMeta().getOrDefault("sts.cooldown.ultrabeast", defaultValues);
             } else {
                 metaResult = metaData.getMeta().getOrDefault("sts.cooldown", defaultValues);
