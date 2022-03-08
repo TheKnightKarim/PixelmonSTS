@@ -3,18 +3,20 @@
 // Taken from the internet. vvv
 buildscript {
     repositories {
-        jcenter()
-        maven { url = "http://files.minecraftforge.net/maven" }
+        maven { url = 'https://maven.minecraftforge.net' }
+        maven { url = "https://plugins.gradle.org/m2/" }
+
+        mavenCentral()
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
-        classpath 'com.github.jengelman.gradle.plugins:shadow:4.0.4'
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1+', changing: true
+        classpath "gradle.plugin.com.github.johnrengelman:shadow:7.1.2"
     }
 }
 
 // Taken from the internet. vvv
-apply plugin: 'net.minecraftforge.gradle.forge'
-apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'net.minecraftforge.gradle'
+apply plugin: "com.github.johnrengelman.shadow"
 
 // Sets the version number shown in the file name.
 version = "1.1.7"
@@ -36,14 +38,25 @@ tasks.withType(JavaCompile)
         }
 
 // Basic info for what we're compiling against and how we're doing it, I think?
-minecraft
-        {
-            version = project.forgeVersion
-            mappings = project.mcpVersion
-            runDir = 'run'
-            //useDepAts = true
-            //makeObfSourceJar = false
+minecraft {
+    mappings channel: 'stable', version: '39-1.12'
+
+    accessTransformer = file('src/main/resources/META-INF/pixelmon_at.cfg')
+
+    runs {
+        client {
+            workingDirectory project.file('run')
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
         }
+
+        server {
+            property 'forge.logging.markers', 'REGISTRIES'
+            property 'forge.logging.console.level', 'debug'
+
+        }
+    }
+}
 
 // Taken from the internet. vvv
 repositories {
@@ -55,17 +68,17 @@ repositories {
 }
 
 // Allows Sponge and Pixelmon stuff to load up correctly.
-dependencies
-        {
+dependencies {
             // Grab and include Sponge.
-            compile 'org.spongepowered:spongeforge:1.12.2-2838-7.1.8:dev'
+            minecraft 'net.minecraftforge:forge:1.12.2-14.23.5.2860'
+            implementation 'org.spongepowered:spongeforge:1.12.2-2838-7.1.8:dev'
             shadow fileTree(dir: 'libs', include: 'gooeylibs-1.0.3.jar')
 
-            compile 'net.luckperms:api:5.0'
+            implementation 'net.luckperms:api:5.0'
 
             // Automatically grabs libraries from the libs folder and adds them to the project. Thanks, CraftSteamG!
-            provided fileTree(dir: 'libs', include: '*.jar')
-        }
+            implementation fileTree(dir: 'libs', include: ['*.jar'])
+}
 
 configurations {
     provided
@@ -87,20 +100,11 @@ reobf {
 }
 
 processResources {
-    // this will ensure that this task is redone when the versions change.
-    inputs.property "version", project.version
-    inputs.property "mcversion", project.minecraft.version
-
-    // replace stuff in mcmod.info, nothing else
     from(sourceSets.main.resources.srcDirs) {
-        include "mcmod.info"
-
-        // replace version and mcversion
-        expand "version": project.version, "mcversion": project.minecraft.version
+        include 'mcmod.info'
+        expand 'version': version, 'mcversion': "1.12.2", 'fversion': "Forge 14.23.5.2860"
     }
-
-    // copy everything else, thats not the mcmod.info
     from(sourceSets.main.resources.srcDirs) {
-        exclude "mcmod.info"
+        exclude 'mcmod.info'
     }
 }
