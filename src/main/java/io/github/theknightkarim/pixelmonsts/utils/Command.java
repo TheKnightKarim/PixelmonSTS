@@ -66,5 +66,10 @@ public class Command extends CommandBase {
         }
         return getListOfStringsMatchingLastWord(args, possibleArgs);
     }
+
+    @Override
+    public List<String> getAliases() {
+        return new ArrayList<>(Arrays.asList("pokests", "psts"));
+    }
 }
 

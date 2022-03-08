@@ -8,10 +8,10 @@ import com.pixelmonmod.pixelmon.api.pokemon.Pokemon;
 import com.pixelmonmod.pixelmon.api.storage.PCStorage;
 import com.pixelmonmod.pixelmon.config.PixelmonConfig;
 import com.pixelmonmod.pixelmon.config.PixelmonItems;
-import com.pixelmonmod.pixelmon.config.PixelmonItemsHeld;
 import com.pixelmonmod.pixelmon.entities.pixelmon.stats.EVStore;
 import com.pixelmonmod.pixelmon.entities.pixelmon.stats.Gender;
 import com.pixelmonmod.pixelmon.entities.pixelmon.stats.IVStore;
+import com.pixelmonmod.pixelmon.entities.pixelmon.stats.StatsType;
 import com.pixelmonmod.pixelmon.enums.EnumSpecies;
 import com.pixelmonmod.pixelmon.items.ItemPixelmonSprite;
 import com.pixelmonmod.pixelmon.storage.PlayerPartyStorage;
@@ -25,13 +25,11 @@ import net.luckperms.api.cacheddata.CachedMetaData;
 import net.luckperms.api.model.user.User;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.text.TextFormatting;
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.item.ItemType;
 import org.spongepowered.api.service.economy.account.UniqueAccount;
 import org.spongepowered.api.service.economy.transaction.ResultType;
 import org.spongepowered.api.service.economy.transaction.TransactionResult;
@@ -60,20 +58,22 @@ public class Utils {
     private static List<String> getDesc(Pokemon pokemon, EntityPlayerMP player) {
         List<String> lore = new ArrayList<>();
         DecimalFormat df = new DecimalFormat("###.##");
-        String evPercentage = df.format(((pokemon.getStats().evs.hp + pokemon.getStats().evs.attack + pokemon.getStats().evs.defence + pokemon.getStats().evs.specialAttack + pokemon.getStats().evs.specialDefence + pokemon.getStats().evs.speed)*100)/510) + "%";
+        EVStore evStore = pokemon.getEVs();
+        String evPercentage = df.format(((evStore.getStat(StatsType.HP) + evStore.getStat(StatsType.Attack) + evStore.getStat(StatsType.Defence) + evStore.getStat(StatsType.SpecialAttack) + evStore.getStat(StatsType.SpecialDefence) + evStore.getStat(StatsType.Speed)) * 100L)/510) + "%";
         if (pokemon.isEgg()) {
             lore.add(regex(Translation.StatLore.egglore));
             return lore;
         } else {
+            IVStore ivStore = pokemon.getIVs();
             lore.add(regex(Translation.StatLore.levellore) + pokemon.getLevel());
             lore.add(regex(Translation.StatLore.abilitylore) + pokemon.getAbility().getLocalizedName());
             noGender(pokemon, lore);
             lore.add(regex(Translation.StatLore.naturelore) + pokemon.getNature());
             lore.add(regex(Translation.StatLore.growthlore) + pokemon.getGrowth());
             lore.add(regex(Translation.StatLore.IVslore));
-            lore.add(TextFormatting.AQUA + "" + pokemon.getStats().ivs.hp + TextFormatting.GRAY + "/" + TextFormatting.AQUA + pokemon.getStats().ivs.attack + TextFormatting.GRAY + "/" + TextFormatting.AQUA + pokemon.getStats().ivs.defence + TextFormatting.GRAY + "/" + TextFormatting.AQUA + pokemon.getStats().ivs.specialAttack + TextFormatting.GRAY + "/" + TextFormatting.AQUA + pokemon.getStats().ivs.specialDefence + TextFormatting.GRAY + "/" + TextFormatting.AQUA + pokemon.getStats().ivs.speed + TextFormatting.GRAY + " [" + TextFormatting.AQUA + pokemon.getStats().ivs.getPercentage(0) + "%" + TextFormatting.GRAY + "]");
+            lore.add(TextFormatting.AQUA + "" + ivStore.getStat(StatsType.HP) + TextFormatting.GRAY + "/" + TextFormatting.AQUA + ivStore.getStat(StatsType.Attack) + TextFormatting.GRAY + "/" + TextFormatting.AQUA + ivStore.getStat(StatsType.Defence) + TextFormatting.GRAY + "/" + TextFormatting.AQUA + ivStore.getStat(StatsType.SpecialAttack) + TextFormatting.GRAY + "/" + TextFormatting.AQUA + ivStore.getStat(StatsType.SpecialDefence) + TextFormatting.GRAY + "/" + TextFormatting.AQUA + ivStore.getStat(StatsType.Speed) + TextFormatting.GRAY + " [" + TextFormatting.AQUA + pokemon.getStats().ivs.getPercentage(0) + "%" + TextFormatting.GRAY + "]");
             lore.add(regex(Translation.StatLore.EVslore));
-            lore.add(TextFormatting.AQUA + "" + pokemon.getStats().evs.hp + TextFormatting.GRAY + "/" + TextFormatting.AQUA + pokemon.getStats().evs.attack + TextFormatting.GRAY + "/" + TextFormatting.AQUA + pokemon.getStats().evs.defence + TextFormatting.GRAY + "/" + TextFormatting.AQUA + pokemon.getStats().evs.specialAttack + TextFormatting.GRAY + "/" + TextFormatting.AQUA + pokemon.getStats().evs.specialDefence + TextFormatting.GRAY + "/" + TextFormatting.AQUA + pokemon.getStats().evs.speed + TextFormatting.GRAY + " [" + TextFormatting.AQUA + evPercentage + TextFormatting.GRAY + "]");
+            lore.add(TextFormatting.AQUA + "" + evStore.getStat(StatsType.HP) + TextFormatting.GRAY + "/" + TextFormatting.AQUA + evStore.getStat(StatsType.Attack) + TextFormatting.GRAY + "/" + TextFormatting.AQUA + evStore.getStat(StatsType.Defence) + TextFormatting.GRAY + "/" + TextFormatting.AQUA + evStore.getStat(StatsType.SpecialAttack) + TextFormatting.GRAY + "/" + TextFormatting.AQUA + evStore.getStat(StatsType.SpecialDefence) + TextFormatting.GRAY + "/" + TextFormatting.AQUA + evStore.getStat(StatsType.Speed) + TextFormatting.GRAY + " [" + TextFormatting.AQUA + evPercentage + TextFormatting.GRAY + "]");
             if (UIs.BulkList.get(player.getUniqueID()) != null && UIs.BulkList.get(player.getUniqueID()).contains(pokemon)) {
                 lore.add(Utils.regex(Translation.monInList));
             }
@@ -115,8 +115,8 @@ public class Utils {
         JsonObject number2 = new JsonObject();
 
         JsonArray json1 = new JsonArray();
-        for(String s : EnumSpecies.legendaries) {
-            json1.add(s);
+        for(EnumSpecies s : EnumSpecies.legendaries) {
+            json1.add(s.getPokemonName());
         }
         jsonObject.add("1", number1);
         number1.add("names", json1);
@@ -133,8 +133,8 @@ public class Utils {
 
 
         JsonArray json2 = new JsonArray();
-        for(String s : EnumSpecies.ultrabeasts) {
-            json2.add(s);
+        for(EnumSpecies s : EnumSpecies.ultrabeasts) {
+            json2.add(s.getPokemonName());
         }
         jsonObject.add("2", number2);
         number2.add("names", json2);
@@ -184,7 +184,7 @@ public class Utils {
         if (sd.legendary > 0 && pokemon.isLegendary())
             lore.add(regex(Translation.PriceLore.legendary + sd.legendary));
 
-        if (sd.ub > 0 && EnumSpecies.ultrabeasts.contains(pokemon.getSpecies().getPokemonName()))
+        if (sd.ub > 0 && EnumSpecies.ultrabeasts.contains(pokemon.getSpecies()))
             lore.add(regex(Translation.PriceLore.ultrabeast + sd.ub));
 
         if (sd.maxIV > 0) {
@@ -239,7 +239,7 @@ public class Utils {
             price += sd.customtexture;
         if (pokemon.isLegendary())
             price += sd.legendary;
-        if (EnumSpecies.ultrabeasts.contains(pokemon.getSpecies().getPokemonName()))
+        if (EnumSpecies.ultrabeasts.contains(pokemon.getSpecies()))
             price += sd.ub;
         if (sd.maxIV > 0) {
             int max = 0;
@@ -569,17 +569,20 @@ public class Utils {
         if (metaData != null) {
             if (Utils.playerPokemon.get(player.getUniqueID()).isLegendary()) {
                 metaResult = metaData.getMeta().getOrDefault("sts.cooldown.legendary", defaultValues);
-            } else if (EnumSpecies.ultrabeasts.contains(Utils.playerPokemon.get(player.getUniqueID()).getBaseStats().pixelmonName)) {
+            } else if (EnumSpecies.ultrabeasts.contains(Utils.playerPokemon.get(player.getUniqueID()).getBaseStats().getSpecies())) {
                 metaResult = metaData.getMeta().getOrDefault("sts.cooldown.ultrabeast", defaultValues);
             } else {
                 metaResult = metaData.getMeta().getOrDefault("sts.cooldown", defaultValues);
             }
         }
         if (metaResult.contains(String.valueOf(Config.CooldownTime))) {
-            return ((UIs.cooldownMap.get(player.getUniqueID()) / 1000) + Config.CooldownTime) - (System.currentTimeMillis() / 1000);
+            if (metaResult != null) {
+                return ((UIs.cooldownMap.get(player.getUniqueID()) / 1000) + Config.CooldownTime) - (System.currentTimeMillis() / 1000);
+            }
         } else {
             return ((UIs.cooldownMap.get(player.getUniqueID()) / 1000) + Integer.parseInt(metaResult.get(0)) - (System.currentTimeMillis() / 1000));
         }
+        return 0L;
     }
 
     static void enoughMoney(EntityPlayerMP player) {
